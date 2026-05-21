@@ -36,9 +36,6 @@ migrate_working_dir/
 /rust/target/
 Cargo.lock
 
-# FRB codegen output — run `flutter_rust_bridge_codegen generate` to regenerate
-lib/src/rust/
-
 # Android build artifacts
 android/.gradle/
 android/build/

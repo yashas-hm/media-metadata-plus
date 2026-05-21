@@ -1,6 +1,3 @@
-use flutter_rust_bridge::frb;
-
-#[frb(dart_metadata = ("freezed"))]
 pub struct MediaMeta {
     pub mime_type: String,
     pub width: Option<u32>,

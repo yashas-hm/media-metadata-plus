@@ -1,5 +1,5 @@
 import 'package:flutter_media_metadata/src/models/gps_coordinates.dart';
-import 'package:flutter_media_metadata/src/rust/frb_generated.dart';
+import 'package:flutter_media_metadata/src/rust/api.dart';
 
 class MediaMetadata {
   final String mimeType;
@@ -30,7 +30,8 @@ class MediaMetadata {
         width: raw.width,
         height: raw.height,
         capturedAt: raw.capturedAtMs != null
-            ? DateTime.fromMillisecondsSinceEpoch(raw.capturedAtMs!, isUtc: true)
+            ? DateTime.fromMillisecondsSinceEpoch(raw.capturedAtMs!,
+                isUtc: true)
             : null,
         cameraMake: raw.cameraMake,
         cameraModel: raw.cameraModel,
