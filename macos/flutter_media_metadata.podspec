@@ -17,4 +17,6 @@ Pod::Spec.new do |s|
 
   s.swift_version    = '5.0'
   s.dependency 'FlutterMacOS'
+
+  s.resource_bundles = {'flutter_media_metadata_privacy' => ['Resources/PrivacyInfo.xcprivacy']}
 end
