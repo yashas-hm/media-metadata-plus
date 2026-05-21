@@ -93,6 +93,28 @@ void main() {
     });
   });
 
+  group('RAW / TIFF', () {
+    // These tests are skipped automatically if the fixture file is absent.
+    // Add real RAW files to example/integration_test/media/ and re-run.
+    for (final entry in {
+      'photo.tiff': 'image/tiff',
+      'photo.dng': 'image/tiff',
+      'photo.nef': 'image/tiff',
+      'photo.arw': 'image/tiff',
+      'photo.cr2': 'image/x-canon-cr2',
+    }.entries) {
+      testWidgets('reads EXIF from ${entry.key}', (_) async {
+        final path = _fixture(entry.key);
+        if (!File(path).existsSync()) return; // fixture not present — skip
+        final meta = await MediaMetadata.read(path);
+        expect(meta, isNotNull);
+        expect(meta?.mimeType, entry.value);
+        expect(meta?.capturedAt, isNotNull);
+        expect(meta?.cameraMake, isNotNull);
+      });
+    }
+  });
+
   testWidgets('returns null for unsupported format', (_) async {
     final meta = await MediaMetadata.read(_fixture('document.txt'));
     expect(meta, isNull);

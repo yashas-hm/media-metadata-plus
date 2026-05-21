@@ -8,3 +8,10 @@
 #   video.mov       — MOV with creation time
 #   document.txt    — unsupported format (expect null)
 #   corrupt.jpg     — truncated/invalid JPEG (expect null)
+#
+# 0.3.0 RAW fixtures (optional — tests are skipped if files are absent):
+#   photo.tiff      — TIFF with EXIF
+#   photo.dng       — Adobe DNG (RAW)
+#   photo.nef       — Nikon NEF (RAW)
+#   photo.arw       — Sony ARW (RAW)
+#   photo.cr2       — Canon CR2 (RAW)
