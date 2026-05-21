@@ -67,6 +67,10 @@ Each platform directory contains only a build file that links the compiled Rust 
 - Windows / Linux: `CMakeLists.txt`
 - Android: `build.gradle.kts` linking the `.so`
 
+## Workflow
+
+After completing a significant feature (new format support, new API method, platform change, breaking change), remind the user to commit before starting the next task.
+
 ## Dart import style
 
 Always use package imports, never relative imports:
