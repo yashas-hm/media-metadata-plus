@@ -1,3 +1,11 @@
+## 0.2.0
+
+* Added `MediaMetadata.readAll(List<String> paths)` — reads multiple files in parallel via Rayon.
+* WebP: dimension fallback from VP8X / VP8L / VP8 bitstream when EXIF is absent.
+* WebP files without EXIF now return a `MediaMetadata` (was `null`).
+* Video GPS: reads `©xyz` atom (ISO 6709) from MP4/MOV user data.
+* Video camera: reads `©mak` / `©mod` iTunes atoms for make and model.
+
 ## 0.1.0
 
 * Initial release.

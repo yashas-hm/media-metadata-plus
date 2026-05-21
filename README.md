@@ -31,7 +31,7 @@ Rust via `flutter_rust_bridge` v2.
 
 ```yaml
 dependencies:
-  media_metadata_plus: ^0.1.0
+  media_metadata_plus: ^0.2.0
 ```
 
 ## Usage
