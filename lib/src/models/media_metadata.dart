@@ -51,18 +51,50 @@ class MediaMetadata {
 
   static bool _initialized = false;
 
+  static Future<void> _ensureInit() async {
+    if (!_initialized) {
+      await RustLib.init();
+      _initialized = true;
+    }
+  }
+
   /// Reads metadata from the file at [filePath].
   ///
   /// Returns `null` if the format is unsupported or the file is corrupt.
   /// Supported formats: JPEG, HEIC/HEIF, PNG, WebP, MP4, MOV.
   static Future<MediaMetadata?> read(String filePath) async {
-    if (!_initialized) {
-      await RustLib.init();
-      _initialized = true;
-    }
+    await _ensureInit();
     try {
-      final raw = await readMetadata(path: filePath);
-      return MediaMetadata(
+      return _fromRaw(await readMetadata(path: filePath));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Reads metadata from multiple files in parallel (Rayon on the Rust side).
+  ///
+  /// Each element in the returned list corresponds to the file at the same
+  /// index in [filePaths]. An entry is `null` if the file is unsupported or
+  /// corrupt. Preserves input order.
+  ///
+  /// ```dart
+  /// final results = await MediaMetadata.readAll(paths);
+  /// for (final meta in results) {
+  ///   print(meta?.mimeType);
+  /// }
+  /// ```
+  static Future<List<MediaMetadata?>> readAll(List<String> filePaths) async {
+    if (filePaths.isEmpty) return [];
+    await _ensureInit();
+    try {
+      final raws = await readMetadataBatch(paths: filePaths);
+      return raws.map((raw) => raw == null ? null : _fromRaw(raw)).toList();
+    } catch (_) {
+      return List.filled(filePaths.length, null);
+    }
+  }
+
+  static MediaMetadata _fromRaw(MediaMeta raw) => MediaMetadata(
         mimeType: raw.mimeType,
         width: raw.width,
         height: raw.height,
@@ -85,10 +117,6 @@ class MediaMetadata {
             ? Duration(milliseconds: raw.durationMs!.toInt())
             : null,
       );
-    } catch (_) {
-      return null;
-    }
-  }
 
   @override
   String toString() => 'MediaMetadata('

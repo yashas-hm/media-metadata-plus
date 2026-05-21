@@ -3,12 +3,16 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-
 import 'frb_generated.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 Future<MediaMeta> readMetadata({required String path}) =>
     RustLib.instance.api.crateApiReadMetadata(path: path);
+
+/// Read metadata from multiple files in parallel using Rayon.
+/// Each entry is `None` if the file is unsupported or corrupt.
+Future<List<MediaMeta?>> readMetadataBatch({required List<String> paths}) =>
+    RustLib.instance.api.crateApiReadMetadataBatch(paths: paths);
 
 class MediaMeta {
   final String mimeType;

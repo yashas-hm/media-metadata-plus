@@ -23,3 +23,13 @@ pub fn read_metadata(path: String) -> anyhow::Result<MediaMeta> {
         _ => Err(anyhow::anyhow!("unsupported format: {mime}")),
     }
 }
+
+/// Read metadata from multiple files in parallel using Rayon.
+/// Each entry is `None` if the file is unsupported or corrupt.
+pub fn read_metadata_batch(paths: Vec<String>) -> Vec<Option<MediaMeta>> {
+    use rayon::prelude::*;
+    paths
+        .par_iter()
+        .map(|p| read_metadata(p.clone()).ok())
+        .collect()
+}
