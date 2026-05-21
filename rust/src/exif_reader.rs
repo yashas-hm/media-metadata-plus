@@ -5,20 +5,97 @@ use crate::api::MediaMeta;
 pub fn read(path: &Path, mime: &str) -> anyhow::Result<MediaMeta> {
     let file = std::fs::File::open(path)?;
     let mut bufreader = std::io::BufReader::new(file);
-    let exif = exif::Reader::new().read_from_container(&mut bufreader)?;
 
-    Ok(MediaMeta {
-        mime_type: mime.to_string(),
-        width: read_u32(&exif, exif::Tag::ImageWidth),
-        height: read_u32(&exif, exif::Tag::ImageLength),
-        captured_at_ms: read_date(&exif),
-        camera_make: read_str(&exif, exif::Tag::Make),
-        camera_model: read_str(&exif, exif::Tag::Model),
-        latitude: read_gps_lat(&exif),
-        longitude: read_gps_lon(&exif),
-        altitude: read_gps_alt(&exif),
-        duration_ms: None,
-    })
+    match exif::Reader::new().read_from_container(&mut bufreader) {
+        Ok(exif) => {
+            let mut width = read_u32(&exif, exif::Tag::ImageWidth);
+            let mut height = read_u32(&exif, exif::Tag::ImageLength);
+
+            // WebP: EXIF dimension tags are optional — fall back to bitstream
+            if mime == "image/webp" && (width.is_none() || height.is_none()) {
+                if let Some((w, h)) = webp_dimensions(path) {
+                    width = width.or(Some(w));
+                    height = height.or(Some(h));
+                }
+            }
+
+            Ok(MediaMeta {
+                mime_type: mime.to_string(),
+                width,
+                height,
+                captured_at_ms: read_date(&exif),
+                camera_make: read_str(&exif, exif::Tag::Make),
+                camera_model: read_str(&exif, exif::Tag::Model),
+                latitude: read_gps_lat(&exif),
+                longitude: read_gps_lon(&exif),
+                altitude: read_gps_alt(&exif),
+                duration_ms: None,
+            })
+        }
+
+        // WebP files without EXIF — return dimensions from bitstream
+        Err(_) if mime == "image/webp" => {
+            let (width, height) = webp_dimensions(path)
+                .map(|(w, h)| (Some(w), Some(h)))
+                .unwrap_or((None, None));
+            Ok(MediaMeta {
+                mime_type: mime.to_string(),
+                width,
+                height,
+                captured_at_ms: None,
+                camera_make: None,
+                camera_model: None,
+                latitude: None,
+                longitude: None,
+                altitude: None,
+                duration_ms: None,
+            })
+        }
+
+        Err(e) => Err(e.into()),
+    }
+}
+
+/// Read image dimensions directly from the WebP bitstream (VP8X / VP8L / VP8).
+/// Used when EXIF dimension tags are absent.
+fn webp_dimensions(path: &Path) -> Option<(u32, u32)> {
+    use std::io::Read;
+    let mut f = std::fs::File::open(path).ok()?;
+    // RIFF(4) + file_size(4) + WEBP(4) + chunk_type(4) + chunk_size(4) + chunk_data(up to 10)
+    let mut buf = [0u8; 30];
+    f.read_exact(&mut buf).ok()?;
+    if &buf[..4] != b"RIFF" || &buf[8..12] != b"WEBP" {
+        return None;
+    }
+    match &buf[12..16] {
+        b"VP8X" => {
+            // flags(4) + canvas_width_minus_1(3 LE) + canvas_height_minus_1(3 LE)
+            let w = u32::from_le_bytes([buf[24], buf[25], buf[26], 0]) + 1;
+            let h = u32::from_le_bytes([buf[27], buf[28], buf[29], 0]) + 1;
+            Some((w, h))
+        }
+        b"VP8L" => {
+            // signature byte (0x2F), then bits[0:13]=width-1, bits[14:27]=height-1
+            if buf[20] != 0x2F {
+                return None;
+            }
+            let bits = u32::from_le_bytes([buf[21], buf[22], buf[23], buf[24]]);
+            let w = (bits & 0x3FFF) + 1;
+            let h = ((bits >> 14) & 0x3FFF) + 1;
+            Some((w, h))
+        }
+        b"VP8 " => {
+            // 3-byte frame tag, then start code 0x9d 0x01 0x2a, then width/height (14-bit LE)
+            if buf[23] == 0x9d && buf[24] == 0x01 && buf[25] == 0x2a {
+                let w = (u16::from_le_bytes([buf[26], buf[27]]) & 0x3FFF) as u32;
+                let h = (u16::from_le_bytes([buf[28], buf[29]]) & 0x3FFF) as u32;
+                Some((w, h))
+            } else {
+                None
+            }
+        }
+        _ => None,
+    }
 }
 
 fn read_u32(exif: &exif::Exif, tag: exif::Tag) -> Option<u32> {
@@ -30,9 +107,7 @@ fn read_u32(exif: &exif::Exif, tag: exif::Tag) -> Option<u32> {
 }
 
 fn read_str(exif: &exif::Exif, tag: exif::Tag) -> Option<String> {
-    if let exif::Value::Ascii(ref v) =
-        exif.get_field(tag, exif::In::PRIMARY)?.value
-    {
+    if let exif::Value::Ascii(ref v) = exif.get_field(tag, exif::In::PRIMARY)?.value {
         let s = std::str::from_utf8(v.first()?).ok()?.trim().to_string();
         if s.is_empty() { None } else { Some(s) }
     } else {
