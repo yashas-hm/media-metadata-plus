@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://raw.githubusercontent.com/yashas-hm/media-metadata-plus/refs/heads/main/assets/image.png" width="50%">
+<img src="https://raw.githubusercontent.com/yashas-hm/media-metadata-plus/refs/heads/main/assets/image.png" width="80%">
 </div>
 
 # Media Metadata Plus
