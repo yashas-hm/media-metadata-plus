@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://raw.githubusercontent.com/yashas-hm/media-metadata-plus/refs/heads/main/assets/git_image.png" width="80%">
+<img src="https://raw.githubusercontent.com/yashas-hm/media-metadata-plus/refs/heads/main/image_asset.png" width="80%">
 </div>
 
 A cross-platform Flutter plugin for reading media metadata from images, RAW files, and videos. Powered by Rust via
