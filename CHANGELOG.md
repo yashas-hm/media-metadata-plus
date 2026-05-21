@@ -1,3 +1,7 @@
+## 1.0.1
+
+* Updated README.
+
 ## 1.0.0
 
 First stable release. All core features complete and publish-ready.
