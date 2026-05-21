@@ -13,7 +13,7 @@ A cross-platform Flutter plugin that reads media metadata (EXIF, video) from JPE
 flutter pub get
 
 # Generate Dart FFI bindings from Rust API surface (run after changing rust/src/api.rs)
-flutter_rust_bridge_codegen generate
+bash scripts/generate.sh
 
 # Run tests
 flutter test

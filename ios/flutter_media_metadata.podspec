@@ -2,7 +2,7 @@ Pod::Spec.new do |s|
   s.name             = 'flutter_media_metadata'
   s.version          = '0.1.0'
   s.summary          = 'Read media metadata from JPEG, HEIC, MP4, MOV, PNG and WebP.'
-  s.homepage         = 'https://github.com/yourusername/flutter_media_metadata'
+  s.homepage         = 'https://github.com/yashas-hm/flutter-media-metadata'
   s.license          = { :type => 'MIT', :file => '../LICENSE' }
   s.author           = { 'Yashas H Majmudar' => 'yashashm.dev@gmail.com' }
 

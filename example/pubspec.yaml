@@ -1,14 +1,18 @@
-name: example
-description: "A new Flutter project."
-publish_to: 'none'
+name: flutter_media_metadata_example
+description: Demonstrates flutter_media_metadata — read EXIF and video metadata from any media file.
+publish_to: none
 version: 0.1.0+1
 
 environment:
-  sdk: ^3.11.5
+  sdk: ">=3.3.0 <4.0.0"
+  flutter: ">=3.22.0"
 
 dependencies:
   flutter:
     sdk: flutter
+  flutter_media_metadata:
+    path: ../
+  file_picker: ^8.0.0
 
 dev_dependencies:
   flutter_test:
