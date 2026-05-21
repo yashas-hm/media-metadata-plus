@@ -1,0 +1,11 @@
+# Keeps this directory tracked by git while empty.
+# Add sample media files here for tests to run against:
+#   photo.jpg       — JPEG with EXIF (capturedAt, camera, dimensions)
+#   photo_gps.jpg   — JPEG with GPS coordinates (~37.42, -122.08)
+#   photo.heic      — HEIC with EXIF
+#   video.mp4       — MP4 with duration, dimensions, creation time
+#   video.mov       — MOV with creation time
+#   document.pdf    — unsupported format (expect null)
+#   corrupt.jpg     — truncated/invalid file (expect null)
+#
+# Once files are added, this file can be deleted.
