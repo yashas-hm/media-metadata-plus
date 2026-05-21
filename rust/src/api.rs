@@ -16,9 +16,14 @@ pub fn read_metadata(path: String) -> anyhow::Result<MediaMeta> {
     let mime = crate::mime::detect(path)?;
 
     match mime.as_str() {
-        "image/jpeg" | "image/heic" | "image/heif" | "image/png" | "image/webp" => {
-            crate::exif_reader::read(path, &mime)
-        }
+        "image/jpeg"
+        | "image/heic"
+        | "image/heif"
+        | "image/png"
+        | "image/webp"
+        // TIFF-based: generic TIFF, DNG, NEF, ARW, CR2
+        | "image/tiff"
+        | "image/x-canon-cr2" => crate::exif_reader::read(path, &mime),
         "video/mp4" | "video/quicktime" => crate::video_reader::read(path, &mime),
         _ => Err(anyhow::anyhow!("unsupported format: {mime}")),
     }
