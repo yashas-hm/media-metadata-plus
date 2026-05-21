@@ -62,6 +62,37 @@ void main() {
     });
   });
 
+  group('readAll (batch)', () {
+    testWidgets('returns results in input order', (_) async {
+      final results = await MediaMetadata.readAll([
+        _fixture('photo.jpg'),
+        _fixture('video.mp4'),
+        _fixture('document.txt'),
+      ]);
+      expect(results, hasLength(3));
+      expect(results[0]?.mimeType, 'image/jpeg');
+      expect(results[1]?.mimeType, 'video/mp4');
+      expect(results[2], isNull); // unsupported
+    });
+
+    testWidgets('returns empty list for empty input', (_) async {
+      final results = await MediaMetadata.readAll([]);
+      expect(results, isEmpty);
+    });
+
+    testWidgets('handles mixed valid and corrupt files', (_) async {
+      final results = await MediaMetadata.readAll([
+        _fixture('photo.jpg'),
+        _fixture('corrupt.jpg'),
+        _fixture('video.mov'),
+      ]);
+      expect(results, hasLength(3));
+      expect(results[0], isNotNull);
+      expect(results[1], isNull);
+      expect(results[2], isNotNull);
+    });
+  });
+
   testWidgets('returns null for unsupported format', (_) async {
     final meta = await MediaMetadata.read(_fixture('document.txt'));
     expect(meta, isNull);
