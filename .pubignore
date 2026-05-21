@@ -1,0 +1,7 @@
+# Files tracked by git but not useful to pub.dev consumers
+
+CLAUDE.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+SECURITY.md
+.github/
