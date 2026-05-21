@@ -1,5 +1,5 @@
-name: flutter_media_metadata_example
-description: Demonstrates flutter_media_metadata — read EXIF and video metadata from any media file.
+name: media_metadata_plus_example
+description: Demonstrates media_metadata_plus — read EXIF and video metadata from any media file.
 publish_to: none
 version: 0.1.0+1
 
@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_media_metadata:
+  media_metadata_plus:
     path: ../
   file_picker: ^8.0.0
 

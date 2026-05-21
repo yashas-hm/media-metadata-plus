@@ -40,7 +40,7 @@ if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
   #   ~/Library/Containers/<bundle-id>/Data/rust/target/release/lib<name>.dylib
   if [[ "$DEVICE" == "macos" ]]; then
     BUNDLE_ID="com.example.example"
-    DYLIB_NAME="libflutter_media_metadata.dylib"
+    DYLIB_NAME="libmedia_metadata_plus.dylib"
     SANDBOX_DIR="$HOME/Library/Containers/$BUNDLE_ID/Data/rust/target/release"
     DYLIB_SRC="$REPO_ROOT/rust/target/release/$DYLIB_NAME"
 

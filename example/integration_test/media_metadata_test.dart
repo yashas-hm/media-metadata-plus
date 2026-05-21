@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_media_metadata/flutter_media_metadata.dart';
+import 'package:media_metadata_plus/media_metadata_plus.dart';
 import 'package:integration_test/integration_test.dart';
 
 // Resolves a fixture path relative to the example directory.

@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(PROJECT_NAME "flutter_media_metadata")
+set(PROJECT_NAME "media_metadata_plus")
 project(${PROJECT_NAME} LANGUAGES CXX)
 
-set(PLUGIN_NAME "flutter_media_metadata_plugin")
+set(PLUGIN_NAME "media_metadata_plus_plugin")
 
 add_library(${PLUGIN_NAME} SHARED
-  "flutter_media_metadata_plugin.cc"
+  "media_metadata_plus_plugin.cc"
 )
 
 apply_standard_settings(${PLUGIN_NAME})
@@ -21,7 +21,7 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
 target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
 
 # Rust library is compiled and bundled automatically via ffiPlugin: true
-set(flutter_media_metadata_bundled_libraries
+set(media_metadata_plus_bundled_libraries
   ""
   PARENT_SCOPE
 )

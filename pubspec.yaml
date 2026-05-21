@@ -1,9 +1,9 @@
-name: flutter_media_metadata
+name: media_metadata_plus
 description: Read media metadata (EXIF, video) from JPEG, HEIC, MP4, MOV, PNG and WebP. Powered by Rust, works on all platforms.
 version: 0.1.0
-homepage: https://github.com/yashas-hm/flutter-media-metadata
-repository: https://github.com/yashas-hm/flutter-media-metadata
-issue_tracker: https://github.com/yashas-hm/flutter-media-metadata/issues
+homepage: https://github.com/yashas-hm/media_metadata_plus
+repository: https://github.com/yashas-hm/media_metadata_plus
+issue_tracker: https://github.com/yashas-hm/media_metadata_plus/issues
 
 environment:
   sdk: ">=3.3.0 <4.0.0"

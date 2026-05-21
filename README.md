@@ -1,4 +1,4 @@
-# flutter_media_metadata
+# media_metadata_plus
 
 A cross-platform Flutter plugin for reading media metadata from JPEG, HEIC, PNG, WebP, MP4, and MOV files. Powered by
 Rust via `flutter_rust_bridge` v2.
@@ -28,13 +28,13 @@ Rust via `flutter_rust_bridge` v2.
 
 ```yaml
 dependencies:
-  flutter_media_metadata: ^0.1.0
+  media_metadata_plus: ^0.1.0
 ```
 
 ## Usage
 
 ```dart
-import 'package:flutter_media_metadata/flutter_media_metadata.dart';
+import 'package:media_metadata_plus/media_metadata_plus.dart';
 
 void main() async {
   final meta = await MediaMetadata.read('/path/to/file.heic');
@@ -115,4 +115,3 @@ and inclusive environment.
 ## 📝 License
 
 Project is licensed under the [MIT License](LICENSE).
-

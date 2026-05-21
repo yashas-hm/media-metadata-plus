@@ -1,1 +1,1 @@
-rootProject.name = 'flutter_media_metadata'
+rootProject.name = 'media_metadata_plus'

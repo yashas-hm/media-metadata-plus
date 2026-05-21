@@ -19,7 +19,7 @@ bash scripts/generate.sh
 flutter test
 
 # Run a single test file
-flutter test test/flutter_media_metadata_test.dart
+flutter test test/media_metadata_plus_test.dart
 
 # Run example app on macOS
 cd example && flutter run -d macos
@@ -33,8 +33,8 @@ flutter analyze
 ### Data flow
 ```
 File path (Dart)
-  → MediaMetadata.read(path)          # lib/src/api/media_metadata_api.dart
-  → FFI call via generated bindings   # lib/src/bridge/frb_generated.dart
+  → MediaMetadata.read(path)          # lib/src/models/media_metadata.dart
+  → FFI call via generated bindings   # lib/src/rust/frb_generated.dart
   → Rust: read_metadata(path)         # rust/src/api.rs
       → mime::detect()                # magic-byte format detection
       → exif_reader::read()           # JPEG, HEIC, PNG, WebP
@@ -43,12 +43,10 @@ File path (Dart)
 ```
 
 ### Dart layer (`lib/`)
-Feature code lives in `src/<feature>/` subdirectories:
 - `src/models/` — `MediaMetadata`, `GpsCoordinates` (pure Dart, no FFI)
-- `src/api/` — `MediaMetadata.read()` static method that calls into the bridge (to be added)
-- `src/bridge/` — `frb_generated.dart` (codegen output, do not edit manually)
+- `src/rust/` — `frb_generated.dart` and generated API (codegen output, do not edit manually)
 
-`lib/flutter_media_metadata.dart` is the public barrel — only add exports here.
+`lib/media_metadata_plus.dart` is the public barrel — only add exports here.
 
 ### Rust layer (`rust/`)
 - `src/api.rs` — the FFI surface; only `pub` items here become Dart functions
@@ -67,7 +65,7 @@ Feature code lives in `src/<feature>/` subdirectories:
 Each platform directory contains only a build file that links the compiled Rust artifact. No platform-specific logic lives there.
 - macOS / iOS: `.podspec` with `ffiPlugin` vendored framework
 - Windows / Linux: `CMakeLists.txt`
-- Android: `build.gradle` linking the `.so`
+- Android: `build.gradle.kts` linking the `.so`
 
 ## Dart import style
 
@@ -75,7 +73,7 @@ Always use package imports, never relative imports:
 
 ```dart
 // correct
-import 'package:flutter_media_metadata/src/models/gps_coordinates.dart';
+import 'package:media_metadata_plus/src/models/gps_coordinates.dart';
 
 // wrong
 import '../models/gps_coordinates.dart';

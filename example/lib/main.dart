@@ -1,6 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_media_metadata/flutter_media_metadata.dart';
+import 'package:media_metadata_plus/media_metadata_plus.dart';
 
 void main() {
   runApp(const App());
@@ -12,7 +12,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'flutter_media_metadata',
+      title: 'media_metadata_plus',
       theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
       home: const HomePage(),
     );

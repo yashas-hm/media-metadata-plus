@@ -1,6 +1,6 @@
-import 'package:flutter_media_metadata/src/models/gps_coordinates.dart';
-import 'package:flutter_media_metadata/src/rust/api.dart';
-import 'package:flutter_media_metadata/src/rust/frb_generated.dart';
+import 'package:media_metadata_plus/src/models/gps_coordinates.dart';
+import 'package:media_metadata_plus/src/rust/api.dart';
+import 'package:media_metadata_plus/src/rust/frb_generated.dart';
 
 /// Metadata read from a media file.
 ///

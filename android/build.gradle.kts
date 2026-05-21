@@ -1,4 +1,4 @@
-group = "dev.yashashm.flutter_media_metadata"
+group = "dev.yashashm.media_metadata_plus"
 version = "1.0-SNAPSHOT"
 
 buildscript {
@@ -27,7 +27,7 @@ plugins {
 }
 
 android {
-    namespace = "dev.yashashm.flutter_media_metadata"
+    namespace = "dev.yashashm.media_metadata_plus"
 
     compileSdk = 36
 
