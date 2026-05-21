@@ -1,0 +1,10 @@
+# Fixture media files for integration tests.
+# Add real files here before running: bash scripts/test.sh --integration
+#
+#   photo.jpg       — JPEG with EXIF (capturedAt 2021, camera make/model)
+#   photo_gps.jpg   — JPEG with GPS (~37.42, -122.08)
+#   photo.heic      — HEIC with EXIF
+#   video.mp4       — MP4 with duration, dimensions, creation time
+#   video.mov       — MOV with creation time
+#   document.txt    — unsupported format (expect null)
+#   corrupt.jpg     — truncated/invalid JPEG (expect null)
