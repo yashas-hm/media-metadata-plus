@@ -1,0 +1,16 @@
+name: Feedback
+description: Submit your feedback.
+title: "[Feedback]: "
+labels: [ "feedback" ]
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for taking the time to provide this feedback report!
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Feedback
+      description: Clearly and concisely describe the feedback.
+      placeholder: Tell me your feedback.
+    validations:
+      required: true
