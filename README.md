@@ -33,7 +33,7 @@ A cross-platform Flutter plugin for reading media metadata from images, RAW file
 
 ```yaml
 dependencies:
-  media_metadata_plus: ^0.3.0
+  media_metadata_plus: ^1.0.0
 ```
 
 ## Usage

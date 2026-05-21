@@ -1,3 +1,16 @@
+## 1.0.0
+
+First stable release. All core features complete and publish-ready.
+
+* Supports JPEG, HEIC/HEIF, PNG, WebP, TIFF, DNG, NEF, ARW, CR2, MP4, and MOV.
+* Extracts: capture timestamp, dimensions, camera make/model, GPS coordinates, video duration.
+* `MediaMetadata.readAll()` for parallel batch reads via Rayon.
+* Format detected by magic bytes — not file extension.
+* Video GPS (`©xyz`) and camera (`©mak`/`©mod`) from MP4/MOV user data atoms.
+* WebP without EXIF returns dimensions from bitstream.
+* Powered by Rust via `flutter_rust_bridge` v2. No platform-specific Swift/Kotlin/C++.
+* Supports macOS, Windows, Linux, iOS, and Android.
+
 ## 0.3.0
 
 * Added TIFF support — reads capture time, dimensions, camera make/model, and GPS.
