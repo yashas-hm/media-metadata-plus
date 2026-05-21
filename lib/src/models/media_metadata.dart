@@ -1,4 +1,4 @@
-import 'gps_coordinates.dart';
+import 'package:flutter_media_metadata/src/models/gps_coordinates.dart';
 
 class MediaMetadata {
   final String mimeType;
