@@ -44,6 +44,7 @@ CONTRIBUTING.md
 CODE_OF_CONDUCT.md
 SECURITY.md
 .github/
+assets/
 
 # Editor / OS
 .DS_Store
