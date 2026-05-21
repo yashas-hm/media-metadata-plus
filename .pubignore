@@ -1,7 +1,53 @@
-# Files tracked by git but not useful to pub.dev consumers
+# When .pubignore exists, dart pub publish uses ONLY this file — not .gitignore.
+# Everything excluded from git must be re-listed here.
 
+# AI planning docs
+docs/
+
+# Build artifacts
+build/
+/coverage/
+.dart_tool/
+
+# Rust build artifacts
+rust/target/
+Cargo.lock
+
+# Android build artifacts
+android/.gradle/
+android/build/
+android/local.properties
+
+# iOS / macOS build artifacts
+ios/build/
+macos/build/
+ios/Pods/
+macos/Pods/
+ios/.symlinks/
+macos/.symlinks/
+
+# Linux / Windows build artifacts
+linux/build/
+windows/build/
+
+# Example app generated platform dirs (not part of the plugin)
+example/ios/
+example/android/
+example/linux/
+example/windows/
+example/macos/
+example/web/
+
+# Community / dev-only docs not useful to pub.dev consumers
 CLAUDE.md
 CONTRIBUTING.md
 CODE_OF_CONDUCT.md
 SECURITY.md
 .github/
+
+# Editor / OS
+.DS_Store
+.idea/
+*.iml
+*.ipr
+*.iws
