@@ -39,7 +39,8 @@ void main() {
     });
 
     test('toString includes key fields', () {
-      const meta = MediaMetadata(mimeType: 'image/heic', width: 4032, height: 3024);
+      const meta =
+          MediaMetadata(mimeType: 'image/heic', width: 4032, height: 3024);
       final s = meta.toString();
       expect(s, contains('image/heic'));
       expect(s, contains('4032'));

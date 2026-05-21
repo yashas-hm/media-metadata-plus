@@ -50,15 +50,15 @@ class _HomePageState extends State<HomePage> {
         child: _loading
             ? const CircularProgressIndicator()
             : _meta == null
-            ? ElevatedButton.icon(
-                onPressed: _pick,
-                icon: const Icon(Icons.file_open),
-                label: const Text('Pick a file'),
-              )
-            : _MetaView(
-                meta: _meta!,
-                onReset: () => setState(() => _meta = null),
-              ),
+                ? ElevatedButton.icon(
+                    onPressed: _pick,
+                    icon: const Icon(Icons.file_open),
+                    label: const Text('Pick a file'),
+                  )
+                : _MetaView(
+                    meta: _meta!,
+                    onReset: () => setState(() => _meta = null),
+                  ),
       ),
     );
   }
@@ -109,21 +109,21 @@ class _MetaView extends StatelessWidget {
   }
 
   Widget _row(String label, String value) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 100,
-          child: Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 100,
+              child: Text(
+                label,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Expanded(child: Text(value)),
+          ],
         ),
-        Expanded(child: Text(value)),
-      ],
-    ),
-  );
+      );
 
   String _formatDuration(Duration d) {
     final h = d.inHours;
