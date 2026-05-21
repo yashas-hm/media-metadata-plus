@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:media_metadata_plus/media_metadata_plus.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:media_metadata_plus/media_metadata_plus.dart';
 
 // Resolves a fixture path relative to the example directory.
 // On desktop, Directory.current is the example/ directory when run via

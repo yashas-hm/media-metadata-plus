@@ -2,21 +2,22 @@
 <img src="https://raw.githubusercontent.com/yashas-hm/media-metadata-plus/refs/heads/main/assets/image.png" width="80%">
 </div>
 
-A cross-platform Flutter plugin for reading media metadata from images, RAW files, and videos. Powered by Rust via `flutter_rust_bridge` v2.
+A cross-platform Flutter plugin for reading media metadata from images, RAW files, and videos. Powered by Rust via
+`flutter_rust_bridge` v2.
 
 ## Supported formats
 
-| Format | Metadata |
-|--------|----------|
-| JPEG / JPG | Capture time, dimensions, camera, GPS |
-| HEIC / HEIF | Capture time, dimensions, camera, GPS |
-| PNG | Capture time, dimensions |
-| WebP | Capture time, dimensions, camera, GPS |
-| TIFF | Capture time, dimensions, camera, GPS |
+| Format          | Metadata                                                         |
+|-----------------|------------------------------------------------------------------|
+| JPEG / JPG      | Capture time, dimensions, camera, GPS                            |
+| HEIC / HEIF     | Capture time, dimensions, camera, GPS                            |
+| PNG             | Capture time, dimensions                                         |
+| WebP            | Capture time, dimensions, camera, GPS                            |
+| TIFF            | Capture time, dimensions, camera, GPS                            |
 | DNG / NEF / ARW | Capture time, dimensions, camera, GPS (reported as `image/tiff`) |
-| CR2 | Capture time, dimensions, camera, GPS |
-| MP4 | Duration, dimensions, creation time, GPS, camera |
-| MOV | Duration, dimensions, creation time, GPS, camera |
+| CR2             | Capture time, dimensions, camera, GPS                            |
+| MP4             | Duration, dimensions, creation time, GPS, camera                 |
+| MOV             | Duration, dimensions, creation time, GPS, camera                 |
 
 ## Platform support
 
@@ -43,16 +44,16 @@ import 'package:media_metadata_plus/media_metadata_plus.dart';
 void main() async {
   final meta = await MediaMetadata.read('/path/to/file.heic');
 
-  print(meta?.mimeType);      // "image/heic"
-  print(meta?.width);         // 4032
-  print(meta?.height);        // 3024
-  print(meta?.capturedAt);    // 2024-03-15 10:30:00.000Z
-  print(meta?.cameraMake);    // "Apple"
-  print(meta?.cameraModel);   // "iPhone 15 Pro"
-  print(meta?.gps?.lat);      // 37.42195
-  print(meta?.gps?.lon);      // -122.08408
-  print(meta?.gps?.alt);      // 15.3
-  print(meta?.duration);      // null (images) or Duration for video
+  print(meta?.mimeType); // "image/heic"
+  print(meta?.width); // 4032
+  print(meta?.height); // 3024
+  print(meta?.capturedAt); // 2024-03-15 10:30:00.000Z
+  print(meta?.cameraMake); // "Apple"
+  print(meta?.cameraModel); // "iPhone 15 Pro"
+  print(meta?.gps?.lat); // 37.42195
+  print(meta?.gps?.lon); // -122.08408
+  print(meta?.gps?.alt); // 15.3
+  print(meta?.duration); // null (images) or Duration for video
 }
 ```
 

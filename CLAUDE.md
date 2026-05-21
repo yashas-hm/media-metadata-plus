@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-A cross-platform Flutter plugin that reads media metadata (EXIF, video) from JPEG, HEIC, MP4, MOV, PNG, and WebP files. The native layer is written entirely in Rust and exposed to Dart via `flutter_rust_bridge` v2. No Swift, Kotlin, or C++ is involved — `ffiPlugin: true` in `pubspec.yaml` tells Flutter to compile and link the Rust library automatically.
+A cross-platform Flutter plugin that reads media metadata (EXIF, video) from JPEG, HEIC, MP4, MOV, PNG, and WebP files.
+The native layer is written entirely in Rust and exposed to Dart via `flutter_rust_bridge` v2. No Swift, Kotlin, or C++
+is involved — `ffiPlugin: true` in `pubspec.yaml` tells Flutter to compile and link the Rust library automatically.
 
 ## Commands
 
@@ -31,6 +33,7 @@ flutter analyze
 ## Architecture
 
 ### Data flow
+
 ```
 File path (Dart)
   → MediaMetadata.read(path)          # lib/src/models/media_metadata.dart
@@ -43,18 +46,21 @@ File path (Dart)
 ```
 
 ### Dart layer (`lib/`)
+
 - `src/models/` — `MediaMetadata`, `GpsCoordinates` (pure Dart, no FFI)
 - `src/rust/` — `frb_generated.dart` and generated API (codegen output, do not edit manually)
 
 `lib/media_metadata_plus.dart` is the public barrel — only add exports here.
 
 ### Rust layer (`rust/`)
+
 - `src/api.rs` — the FFI surface; only `pub` items here become Dart functions
 - `src/mime.rs` — detects format from the first 16 bytes (not file extension)
 - `src/exif_reader.rs` — reads EXIF from JPEG, HEIC, PNG, WebP via `kamadak-exif`
 - `src/video_reader.rs` — reads duration/dimensions/creation time from MP4/MOV via `mp4` crate
 
 ### Key design decisions
+
 - Format detected by **magic bytes**, not extension — extension can be wrong or absent
 - HEIC metadata is read from the EXIF box without decoding the image (no libheif)
 - All timestamps stored as UTC unix epoch milliseconds (`i64`) in Rust, converted to `DateTime` in Dart
@@ -62,14 +68,18 @@ File path (Dart)
 - MP4 creation time uses the 1904 epoch; offset `2082844800` converts to Unix epoch
 
 ### Platform wiring
-Each platform directory contains only a build file that links the compiled Rust artifact. No platform-specific logic lives there.
+
+Each platform directory contains only a build file that links the compiled Rust artifact. No platform-specific logic
+lives there.
+
 - macOS / iOS: `.podspec` with `ffiPlugin` vendored framework
 - Windows / Linux: `CMakeLists.txt`
 - Android: `build.gradle.kts` linking the `.so`
 
 ## Workflow
 
-After completing a significant feature (new format support, new API method, platform change, breaking change), remind the user to commit before starting the next task.
+After completing a significant feature (new format support, new API method, platform change, breaking change), remind
+the user to commit before starting the next task.
 
 ## Dart import style
 
@@ -85,6 +95,7 @@ import 'gps_coordinates.dart';
 ```
 
 ## Rust crates
+
 ```toml
 kamadak-exif = "0.5"   # EXIF parsing for JPEG, HEIC, PNG, WebP
 mp4 = "0.14"           # MP4/MOV metadata

@@ -1,7 +1,7 @@
 name: Feature request
 description: Suggest a new format, field, or API improvement
 title: "[Feature]: "
-labels: ["enhancement"]
+labels: [ "enhancement" ]
 body:
   - type: markdown
     attributes:
