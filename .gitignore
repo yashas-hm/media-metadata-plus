@@ -16,13 +16,7 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
 # Flutter/Dart/Pub related
-# Libraries should not include pubspec.lock, per https://dart.dev/guides/libraries/private-files#pubspeclock.
 /pubspec.lock
 **/doc/api/
 .dart_tool/
@@ -30,6 +24,7 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Example app — generated platform dirs, not part of the plugin
 /example/ios/
 /example/android/
 /example/linux/
@@ -37,4 +32,47 @@ migrate_working_dir/
 /example/macos/
 /example/web/
 
-docs/AI
+# Rust
+/rust/target/
+Cargo.lock
+
+# Android build artifacts
+android/.gradle/
+android/build/
+android/local.properties
+
+# iOS / macOS build artifacts
+ios/build/
+macos/build/
+ios/Pods/
+macos/Pods/
+ios/.symlinks/
+macos/.symlinks/
+
+# Linux / Windows build artifacts
+linux/build/
+windows/build/
+
+# Preserve core plugin source files
+!android/src/
+!android/build.gradle.kts
+!android/settings.gradle.kts
+!android/AndroidManifest.xml
+!ios/Classes/
+!ios/Assets/
+!ios/Resources/
+!ios/flutter_media_metadata.podspec
+!macos/Classes/
+!macos/Resources/
+!macos/flutter_media_metadata.podspec
+!linux/CMakeLists.txt
+!linux/flutter_media_metadata_plugin.cc
+!linux/include/
+!windows/CMakeLists.txt
+!windows/flutter_media_metadata_plugin.cpp
+!windows/flutter_media_metadata_plugin.h
+!windows/flutter_media_metadata_plugin_c_api.cpp
+!windows/include/
+
+# AI planning docs — not for pub.dev consumers
+docs/AI/
