@@ -2,7 +2,6 @@
 <img src="https://raw.githubusercontent.com/yashas-hm/media-metadata-plus/refs/heads/main/assets/image.png" width="80%">
 </div>
 
-# Media Metadata Plus
 A cross-platform Flutter plugin for reading media metadata from JPEG, HEIC, PNG, WebP, MP4, and MOV files. Powered by
 Rust via `flutter_rust_bridge` v2.
 
