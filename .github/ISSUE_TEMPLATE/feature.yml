@@ -1,48 +1,61 @@
 name: Feature request
-description: Suggest an idea for this project
+description: Suggest a new format, field, or API improvement
 title: "[Feature]: "
-labels: [ "feature request", "enhancement", "feature" ]
+labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
-      value: Thanks for taking the time to complete this form!
+      value: |
+        Thanks for suggesting an improvement! Please describe the use case clearly so the request can be evaluated.
+
   - type: checkboxes
-    id: terms
+    id: preflight
     attributes:
-      label: Guidelines
-      description: By submitting this issue, you agree to follow our [Contributing Guidelines](https://github.com/yashas-hm/open-source-starter/blob/main/CONTRIBUTING.md).
+      label: Before you submit
       options:
-        - label: I agree to follow this project's Contributing Guidelines.
+        - label: I searched existing issues and this hasn't been requested yet.
           required: true
+        - label: I have read the [Contributing Guidelines](../CONTRIBUTING.md).
+          required: true
+
   - type: textarea
-    id: problem
+    id: use_case
     attributes:
-      label: Problem
-      description: Is your feature request related to a problem?
-      placeholder: What problem will this solve?
+      label: Use case / motivation
+      description: What problem does this solve? Who would benefit?
+      placeholder: e.g. I'm building a photo organiser and need to read the lens model from EXIF so I can group shots by lens.
     validations:
       required: true
+
   - type: textarea
-    id: solution
+    id: proposed
     attributes:
-      label: Proposed Solution
-      description: How should this be solved?
-      placeholder: How do you think this should be implemented?
+      label: Proposed solution
+      description: Describe the change you'd like — new API, new field, new format support, etc.
+      placeholder: |
+        Add a `lensModel` field to `MediaMetadata` populated from EXIF tag 0xa434.
     validations:
       required: true
+
   - type: textarea
     id: alternatives
     attributes:
-      label: Alternatives Considered
-      description: Are there other possible approaches?
-      placeholder: Can you think of any other options?
+      label: Alternatives considered
+      description: Are there other approaches that could work?
     validations:
       required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Links, references (EXIF spec, crate docs, etc.), or example files.
+    validations:
+      required: false
+
   - type: checkboxes
     id: contribute
     attributes:
-      label: Contribute
-      description: Do you want to implement this feature?
+      label: Would you like to open a PR for this feature?
       options:
-        - label: "Yes"
-          required: true
+        - label: "Yes, I'd like to contribute an implementation."

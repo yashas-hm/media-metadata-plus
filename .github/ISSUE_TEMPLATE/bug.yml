@@ -1,75 +1,112 @@
 name: Bug report
-description: Report a problem you encountered
+description: Report a problem with media_metadata_plus
 title: "[Bug]: "
-labels: [ "bug" ]
+labels: ["bug"]
 body:
   - type: markdown
     attributes:
-      value: Thank you for taking the time to complete this bug report!
-  - type: input
-    id: project
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much detail as you can so it can be reproduced quickly.
+
+  - type: checkboxes
+    id: preflight
     attributes:
-      label: Project Version
-      description: Which project versions are affected?
-      placeholder: "1.0, 2.2, 3.5.1"
+      label: Before you submit
+      options:
+        - label: I searched existing issues and this hasn't been reported yet.
+          required: true
+        - label: I am using the latest published version of `media_metadata_plus`.
+          required: true
+
+  - type: input
+    id: plugin_version
+    attributes:
+      label: Plugin version
+      placeholder: "0.1.0"
     validations:
       required: true
+
   - type: input
-    id: existing-issues
+    id: flutter_version
     attributes:
-      label: Existing Issues
-      description: Are there any similar existing issues?
-      placeholder: "#42"
+      label: Flutter & Dart SDK version
+      description: Output of `flutter --version`
+      placeholder: "Flutter 3.24.0 • Dart 3.5.0"
     validations:
-      required: false
+      required: true
+
+  - type: checkboxes
+    id: platforms
+    attributes:
+      label: Affected platform(s)
+      options:
+        - label: macOS
+        - label: iOS
+        - label: Android
+        - label: Windows
+        - label: Linux
+
+  - type: checkboxes
+    id: formats
+    attributes:
+      label: Affected file format(s)
+      options:
+        - label: JPEG / JPG
+        - label: HEIC / HEIF
+        - label: PNG
+        - label: WebP
+        - label: MP4
+        - label: MOV
+
   - type: textarea
-    id: what-happened
+    id: description
     attributes:
       label: What happened?
-      description: Clearly and concisely describe the bug.
-      placeholder: Tell us what happened.
+      description: Clearly describe the bug. What did `MediaMetadata.read()` return? Did it throw?
+      placeholder: e.g. Returns null for a valid JPEG that has EXIF data.
     validations:
       required: true
+
   - type: textarea
-    id: repro-steps
+    id: expected
     attributes:
-      label: Steps to reproduce
-      value: |
-        1. 
-        2. 
-        3. 
-        ...
+      label: Expected behaviour
+      placeholder: e.g. Should return a MediaMetadata with capturedAt set.
     validations:
       required: true
+
   - type: textarea
-    id: expected-behavior
+    id: repro
     attributes:
-      label: Expected behavior
-      description: What should have happened?
-      placeholder: What did you expect to happen?
+      label: Minimal reproduction
+      description: Paste the smallest Dart snippet that demonstrates the problem.
+      render: dart
+      placeholder: |
+        final meta = await MediaMetadata.read('/path/to/file.jpg');
+        print(meta); // null — should not be
     validations:
       required: true
+
   - type: textarea
-    id: screenshots
+    id: logs
     attributes:
-      label: Screenshots or Videos
-      description: Add screenshots, gifs, or videos to help explain your problem.
-      placeholder: Upload screenshots, gifs, and videos here
+      label: Logs / stack trace
+      description: Paste any relevant console output or stack traces.
+      render: text
     validations:
       required: false
+
   - type: textarea
     id: additional
     attributes:
-      label: Additional Information
-      description: Add any other useful information about the problem here.
-      placeholder: Is there any additional helpful information you can share?
+      label: Additional context
+      description: Anything else that might help — file size, camera model, etc.
     validations:
       required: false
+
   - type: checkboxes
     id: contribute
     attributes:
-      label: Contribute
-      description: Do you want to fix this bug?
+      label: Would you like to open a PR for this fix?
       options:
-        - label: "Yes"
-          required: true
+        - label: "Yes, I'd like to contribute a fix."

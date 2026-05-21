@@ -1,16 +1,41 @@
 name: Feedback
-description: Submit your feedback.
+description: Share general feedback — API design, docs, DX, anything
 title: "[Feedback]: "
-labels: [ "feedback" ]
+labels: ["feedback"]
 body:
   - type: markdown
     attributes:
-      value: Thank you for taking the time to provide this feedback report!
+      value: |
+        All feedback is welcome — good or bad. This is not the place for bug reports or feature requests; use the dedicated templates for those.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: What does your feedback relate to?
+      options:
+        - API design
+        - Documentation
+        - Performance
+        - Developer experience
+        - Platform support
+        - Other
+    validations:
+      required: true
+
   - type: textarea
     id: feedback
     attributes:
       label: Feedback
-      description: Clearly and concisely describe the feedback.
-      placeholder: Tell me your feedback.
+      description: Be as specific as you can — concrete examples are more actionable than general impressions.
+      placeholder: e.g. The read() method returning null on error makes it hard to tell why a file failed. An optional error callback would help.
     validations:
       required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggestion (optional)
+      description: If you have a specific improvement in mind, describe it here.
+    validations:
+      required: false
