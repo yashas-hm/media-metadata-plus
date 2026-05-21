@@ -1,6 +1,6 @@
 name: media_metadata_plus
-description: Read media metadata (EXIF, video) from JPEG, HEIC, MP4, MOV, PNG and WebP. Powered by Rust, works on all platforms.
-version: 0.2.0
+description: Read media metadata (EXIF, video) from JPEG, HEIC, PNG, WebP, TIFF, CR2, DNG, NEF, ARW, MP4 and MOV. Powered by Rust, works on all platforms.
+version: 0.3.0
 homepage: https://github.com/yashas-hm/media-metadata-plus
 repository: https://github.com/yashas-hm/media-metadata-plus
 issue_tracker: https://github.com/yashas-hm/media-metadata-plus/issues

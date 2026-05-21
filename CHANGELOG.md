@@ -1,3 +1,10 @@
+## 0.3.0
+
+* Added TIFF support — reads capture time, dimensions, camera make/model, and GPS.
+* Added CR2 (Canon RAW) support — detected by magic bytes, full EXIF extraction.
+* Added DNG, NEF (Nikon), and ARW (Sony) support — all TIFF-based; reported as `image/tiff`.
+* No new native dependencies — all RAW formats handled by the existing `kamadak-exif` reader.
+
 ## 0.2.0
 
 * Added `MediaMetadata.readAll(List<String> paths)` — reads multiple files in parallel via Rayon.

@@ -2,19 +2,21 @@
 <img src="https://raw.githubusercontent.com/yashas-hm/media-metadata-plus/refs/heads/main/assets/image.png" width="80%">
 </div>
 
-A cross-platform Flutter plugin for reading media metadata from JPEG, HEIC, PNG, WebP, MP4, and MOV files. Powered by
-Rust via `flutter_rust_bridge` v2.
+A cross-platform Flutter plugin for reading media metadata from images, RAW files, and videos. Powered by Rust via `flutter_rust_bridge` v2.
 
 ## Supported formats
 
-| Format      | Metadata                              |
-|-------------|---------------------------------------|
-| JPEG / JPG  | Capture time, dimensions, camera, GPS |
+| Format | Metadata |
+|--------|----------|
+| JPEG / JPG | Capture time, dimensions, camera, GPS |
 | HEIC / HEIF | Capture time, dimensions, camera, GPS |
-| PNG         | Capture time, dimensions              |
-| WebP        | Capture time, dimensions              |
-| MP4         | Duration, dimensions, creation time   |
-| MOV         | Duration, dimensions, creation time   |
+| PNG | Capture time, dimensions |
+| WebP | Capture time, dimensions, camera, GPS |
+| TIFF | Capture time, dimensions, camera, GPS |
+| DNG / NEF / ARW | Capture time, dimensions, camera, GPS (reported as `image/tiff`) |
+| CR2 | Capture time, dimensions, camera, GPS |
+| MP4 | Duration, dimensions, creation time, GPS, camera |
+| MOV | Duration, dimensions, creation time, GPS, camera |
 
 ## Platform support
 
@@ -30,7 +32,7 @@ Rust via `flutter_rust_bridge` v2.
 
 ```yaml
 dependencies:
-  media_metadata_plus: ^0.2.0
+  media_metadata_plus: ^0.3.0
 ```
 
 ## Usage
