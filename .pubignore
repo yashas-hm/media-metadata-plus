@@ -38,11 +38,21 @@ example/windows/
 example/macos/
 example/web/
 
+# CI + local dev scripts — consumers only need pre-built binaries
+scripts/
+
+# Rust source — consumers use the pre-built binaries in platform dirs
+rust/
+
+# Local dev test — not a consumer example
+example/test/
+
 # Community / dev-only docs not useful to pub.dev consumers
 CLAUDE.md
 CONTRIBUTING.md
 CODE_OF_CONDUCT.md
 SECURITY.md
+image_asset.png
 .github/
 assets/
 
