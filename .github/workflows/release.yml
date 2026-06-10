@@ -127,6 +127,7 @@ jobs:
   release-and-publish:
     needs: [build-apple, build-linux-android, build-windows]
     runs-on: ubuntu-latest
+    environment: pub.dev  # must match the environment name set on pub.dev automated publishing
     permissions:
       contents: write   # create release + push Package.swift commit
       id-token: write   # pub.dev OIDC
@@ -188,9 +189,10 @@ jobs:
           git push origin HEAD:main
 
       # Publish to pub.dev — binaries + stamped Package.swift are in the tarball
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2     # install Flutter (and its bundled Dart) first
         with:
           channel: stable
+      - uses: dart-lang/setup-dart@v1.7.2   # OIDC token exchange runs last so credentials aren't overwritten
 
       - name: Validate package (dry run)
         run: flutter pub publish --dry-run
