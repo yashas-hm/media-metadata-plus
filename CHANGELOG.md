@@ -1,3 +1,7 @@
+## 1.1.1
+
+* Fix pubignore
+
 ## 1.1.0
 
 * Pre-built native binaries are now shipped with the package — consumers no longer need Rust or any native toolchain installed.

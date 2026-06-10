@@ -2,16 +2,16 @@
 # Everything excluded from git must be re-listed here.
 
 # AI planning docs
-docs/
+/docs/
 
 # Build artifacts
-build/
+/build/
 /coverage/
 .dart_tool/
 
 # Rust build artifacts
-rust/target/
-Cargo.lock
+/rust/target/
+/Cargo.lock
 
 # Android build artifacts
 android/.gradle/
@@ -42,7 +42,7 @@ example/web/
 scripts/
 
 # Rust source — consumers use the pre-built binaries in platform dirs
-rust/
+/rust/
 
 # Local dev test — not a consumer example
 example/test/
