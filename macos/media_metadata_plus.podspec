@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'media_metadata_plus'
-  s.version          = '2.0.0'
+  s.version          = '2.0.1'
   s.summary          = 'Read media metadata from JPEG, HEIC, MP4, MOV, PNG and WebP.'
   s.homepage         = 'https://github.com/yashas-hm/media-metadata-plus'
   s.license          = { :type => 'MIT', :file => '../LICENSE' }
