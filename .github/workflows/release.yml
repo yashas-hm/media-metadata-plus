@@ -127,6 +127,9 @@ jobs:
   release-and-publish:
     needs: [build-apple, build-linux-android, build-windows]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create release + push Package.swift commit
+      id-token: write   # pub.dev OIDC
     steps:
       - uses: actions/checkout@v4
         with:
@@ -185,12 +188,10 @@ jobs:
           git push origin HEAD:main
 
       # Publish to pub.dev — binaries + stamped Package.swift are in the tarball
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
+      - uses: dart-lang/setup-dart@v1.7.0
 
       - name: Validate package (dry run)
-        run: flutter pub publish --dry-run
+        run: dart pub publish --dry-run
 
       - name: Publish to pub.dev
-        run: flutter pub publish --force
+        run: dart pub publish --force
