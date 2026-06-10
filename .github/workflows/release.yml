@@ -1,0 +1,194 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write   # create GitHub Release + push Package.swift commit
+  id-token: write   # pub.dev OIDC trusted publisher
+
+jobs:
+
+  # ── macOS + iOS ────────────────────────────────────────────────────────────
+  build-apple:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust targets
+        run: |
+          rustup target add x86_64-apple-darwin
+          rustup target add aarch64-apple-ios
+          rustup target add aarch64-apple-ios-sim
+          rustup target add x86_64-apple-ios
+
+      - name: Build macOS xcframework
+        run: bash scripts/ci/build_macos.sh
+
+      - name: Build iOS xcframework
+        run: bash scripts/ci/build_ios.sh
+
+      - name: Zip xcframeworks
+        run: |
+          cd macos/Frameworks
+          zip -r "../../macos_${{ github.ref_name }}.xcframework.zip" media_metadata_plus.xcframework
+          cd ../../ios/Frameworks
+          zip -r "../../ios_${{ github.ref_name }}.xcframework.zip" media_metadata_plus.xcframework
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apple
+          path: |
+            macos/Frameworks/
+            ios/Frameworks/
+            macos_*.xcframework.zip
+            ios_*.xcframework.zip
+
+      - name: Cleanup Rust target dir
+        if: always()
+        run: rm -rf rust/target
+
+  # ── Linux + Android ────────────────────────────────────────────────────────
+  build-linux-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust targets
+        run: |
+          rustup target add x86_64-unknown-linux-gnu
+          rustup target add aarch64-linux-android
+          rustup target add armv7-linux-androideabi
+          rustup target add x86_64-linux-android
+          rustup target add i686-linux-android
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk
+
+      - uses: android-actions/setup-android@v3
+      - name: Install NDK
+        run: sdkmanager "ndk;27.0.12077973"
+
+      - name: Build Linux .so
+        working-directory: rust
+        run: cargo build --release --target x86_64-unknown-linux-gnu
+
+      - name: Stage Linux .so
+        run: cp rust/target/x86_64-unknown-linux-gnu/release/libmedia_metadata_plus.so linux/
+
+      - name: Build Android .so (4 ABIs)
+        working-directory: rust
+        run: |
+          cargo ndk \
+            -t arm64-v8a -t armeabi-v7a -t x86_64 -t x86 \
+            -o ../android/src/main/jniLibs \
+            build --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-android
+          path: |
+            linux/libmedia_metadata_plus.so
+            android/src/main/jniLibs/
+
+      - name: Cleanup Rust target dir
+        if: always()
+        run: rm -rf rust/target
+
+  # ── Windows ────────────────────────────────────────────────────────────────
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Windows .dll
+        working-directory: rust
+        run: cargo build --release --target x86_64-pc-windows-msvc
+
+      - name: Stage DLL
+        shell: cmd
+        run: copy rust\target\x86_64-pc-windows-msvc\release\media_metadata_plus.dll windows\
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: windows/media_metadata_plus.dll
+
+      - name: Cleanup Rust target dir
+        if: always()
+        shell: pwsh
+        run: Remove-Item -Recurse -Force rust/target
+
+  # ── Release + pub.dev publish ──────────────────────────────────────────────
+  release-and-publish:
+    needs: [build-apple, build-linux-android, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/download-artifact@v4
+        with: { name: apple,         path: . }
+
+      - uses: actions/download-artifact@v4
+        with: { name: linux-android, path: . }
+
+      - uses: actions/download-artifact@v4
+        with: { name: windows,       path: windows/ }
+
+      # Upload xcframeworks to GitHub Release (SPM binaryTarget URLs)
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          files: |
+            macos_${{ github.ref_name }}.xcframework.zip
+            ios_${{ github.ref_name }}.xcframework.zip
+          generate_release_notes: true
+
+      # SHA256 hex is the checksum format SPM expects
+      - name: Compute checksums
+        id: sums
+        run: |
+          echo "macos=$(sha256sum macos_${{ github.ref_name }}.xcframework.zip | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+          echo "ios=$(sha256sum ios_${{ github.ref_name }}.xcframework.zip   | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+
+      # Stamp Package.swift placeholders with real URLs + checksums
+      - name: Stamp Package.swift
+        env:
+          VERSION: ${{ github.ref_name }}
+          MACOS_SUM: ${{ steps.sums.outputs.macos }}
+          IOS_SUM:   ${{ steps.sums.outputs.ios }}
+        run: |
+          BASE="https://github.com/yashas-hm/media-metadata-plus/releases/download/${VERSION}"
+          sed -i "s|url: \".*macos.*\"|url: \"${BASE}/macos_${VERSION}.xcframework.zip\"|"  macos/Package.swift
+          sed -i "s|checksum: \".*\" // macos|checksum: \"${MACOS_SUM}\" // macos|"         macos/Package.swift
+          sed -i "s|url: \".*ios.*\"|url: \"${BASE}/ios_${VERSION}.xcframework.zip\"|"      ios/Package.swift
+          sed -i "s|checksum: \".*\" // ios|checksum: \"${IOS_SUM}\" // ios|"               ios/Package.swift
+
+      - name: Cleanup zips
+        run: rm -f macos_*.xcframework.zip ios_*.xcframework.zip
+
+      # Publish to pub.dev — binaries + stamped Package.swift are in the tarball
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Validate package (dry run)
+        run: flutter pub publish --dry-run
+
+      - name: Publish to pub.dev
+        run: flutter pub publish --force
+
+      # Keep repo Package.swift in sync with the published checksums
+      - name: Commit updated Package.swift
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add macos/Package.swift ios/Package.swift
+          git commit -m "chore: update SPM checksums for ${{ github.ref_name }}"
+          git push origin HEAD:main

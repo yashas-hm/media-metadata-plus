@@ -1,3 +1,8 @@
+## 1.1.0
+
+* Pre-built native binaries are now shipped with the package — consumers no longer need Rust or any native toolchain installed.
+* Added Swift Package Manager (SPM) support for iOS and macOS via `Package.swift` with pre-built xcframework binary targets.
+
 ## 1.0.2
 
 * Updated README.

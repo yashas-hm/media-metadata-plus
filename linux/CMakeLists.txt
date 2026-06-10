@@ -20,8 +20,7 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
 target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
 
-# Rust library is compiled and bundled automatically via ffiPlugin: true
 set(media_metadata_plus_bundled_libraries
-  ""
+  "${CMAKE_CURRENT_SOURCE_DIR}/libmedia_metadata_plus.so"
   PARENT_SCOPE
 )

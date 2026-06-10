@@ -16,8 +16,9 @@ Pod::Spec.new do |s|
     'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386',
   }
 
-  s.swift_version    = '5.0'
-  s.dependency 'Flutter'
+  s.swift_version        = '5.0'
+  s.dependency           'Flutter'
+  s.vendored_frameworks  = 'Frameworks/media_metadata_plus.xcframework'
 
   s.resource_bundles = {'media_metadata_plus_privacy' => ['Resources/PrivacyInfo.xcprivacy']}
 end

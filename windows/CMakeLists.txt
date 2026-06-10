@@ -24,8 +24,7 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
 
-# Rust library is compiled and bundled automatically via ffiPlugin: true
 set(media_metadata_plus_bundled_libraries
-  ""
+  "${CMAKE_CURRENT_SOURCE_DIR}/media_metadata_plus.dll"
   PARENT_SCOPE
 )
