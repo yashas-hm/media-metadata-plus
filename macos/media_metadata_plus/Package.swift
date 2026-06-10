@@ -11,12 +11,12 @@ let package = Package(
         .target(
             name: "media_metadata_plus",
             dependencies: ["MediaMetadataPlusRust"],
-            path: "../Classes",
-            resources: [.process("../../Resources/PrivacyInfo.xcprivacy")]
+            path: "Sources",
+            resources: [.process("PrivacyInfo.xcprivacy")]
         ),
         .binaryTarget(
             name: "MediaMetadataPlusRust",
-            url: "https://github.com/yashas-hm/media-metadata-plus/releases/download/v1.1.1/macos_v1.1.1.xcframework.zip",
+            url: "https://github.com/yashas-hm/media-metadata-plus/releases/download/v1.1.0/macos_v1.1.0.xcframework.zip",
             checksum: "6fc9308cfef74227c98f2651620dbe154cdbf5e310d5fa268188cbbc228aa525" // macos
         )
     ]
