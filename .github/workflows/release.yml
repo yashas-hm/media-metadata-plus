@@ -175,6 +175,15 @@ jobs:
       - name: Cleanup zips
         run: rm -f macos_*.xcframework.zip ios_*.xcframework.zip
 
+      # Commit stamped Package.swift before publish so the working tree is clean
+      - name: Commit updated Package.swift
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add macos/Package.swift ios/Package.swift
+          git commit -m "chore: update SPM checksums for ${{ github.ref_name }}"
+          git push origin HEAD:main
+
       # Publish to pub.dev — binaries + stamped Package.swift are in the tarball
       - uses: subosito/flutter-action@v2
         with:
@@ -185,12 +194,3 @@ jobs:
 
       - name: Publish to pub.dev
         run: flutter pub publish --force
-
-      # Keep repo Package.swift in sync with the published checksums
-      - name: Commit updated Package.swift
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add macos/Package.swift ios/Package.swift
-          git commit -m "chore: update SPM checksums for ${{ github.ref_name }}"
-          git push origin HEAD:main
