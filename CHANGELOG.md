@@ -1,3 +1,7 @@
+## 2.0.1
+
+* Fix SPM issues
+
 ## 2.0.0
 
 * Pre-built native binaries are now shipped with the package — consumers no longer need Rust or any native toolchain installed.
