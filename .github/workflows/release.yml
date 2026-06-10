@@ -4,6 +4,20 @@ on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. v2.0.0)'
+        required: true
+        type: string
+      publish:
+        description: 'Publish to pub.dev after releasing'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
 
 permissions:
   contents: write   # create GitHub Release + push Package.swift commit
@@ -34,9 +48,9 @@ jobs:
       - name: Zip xcframeworks
         run: |
           cd macos/Frameworks
-          zip -r "../../macos_${{ github.ref_name }}.xcframework.zip" media_metadata_plus.xcframework
+          zip -r "../../macos_${{ env.VERSION }}.xcframework.zip" media_metadata_plus.xcframework
           cd ../../ios/Frameworks
-          zip -r "../../ios_${{ github.ref_name }}.xcframework.zip" media_metadata_plus.xcframework
+          zip -r "../../ios_${{ env.VERSION }}.xcframework.zip" media_metadata_plus.xcframework
 
       - uses: actions/upload-artifact@v4
         with:
@@ -150,23 +164,23 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ github.ref_name }}
+          name: ${{ env.VERSION }}
           files: |
-            macos_${{ github.ref_name }}.xcframework.zip
-            ios_${{ github.ref_name }}.xcframework.zip
+            macos_${{ env.VERSION }}.xcframework.zip
+            ios_${{ env.VERSION }}.xcframework.zip
           generate_release_notes: true
 
       # SHA256 hex is the checksum format SPM expects
       - name: Compute checksums
         id: sums
         run: |
-          echo "macos=$(sha256sum macos_${{ github.ref_name }}.xcframework.zip | cut -d' ' -f1)" >> $GITHUB_OUTPUT
-          echo "ios=$(sha256sum ios_${{ github.ref_name }}.xcframework.zip   | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+          echo "macos=$(sha256sum macos_${{ env.VERSION }}.xcframework.zip | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+          echo "ios=$(sha256sum ios_${{ env.VERSION }}.xcframework.zip   | cut -d' ' -f1)" >> $GITHUB_OUTPUT
 
       # Stamp Package.swift placeholders with real URLs + checksums
       - name: Stamp Package.swift
         env:
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ env.VERSION }}
           MACOS_SUM: ${{ steps.sums.outputs.macos }}
           IOS_SUM:   ${{ steps.sums.outputs.ios }}
         run: |
@@ -185,8 +199,12 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add macos/media_metadata_plus/Package.swift ios/media_metadata_plus/Package.swift
-          git commit -m "chore: update SPM checksums for ${{ github.ref_name }}"
+          git commit -m "chore: update SPM checksums for ${{ env.VERSION }}"
           git push origin HEAD:main
+
+      - name: Stop here for test runs
+        if: github.event_name == 'workflow_dispatch' && !inputs.publish
+        run: echo "Manual run without publish — stopping after release + checksum commit." && exit 0
 
       # Publish to pub.dev — binaries + stamped Package.swift are in the tarball
       - uses: subosito/flutter-action@v2     # install Flutter (and its bundled Dart) first

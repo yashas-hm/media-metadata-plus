@@ -5,7 +5,7 @@ let package = Package(
     name: "media_metadata_plus",
     platforms: [.macOS(.v10_14)],
     products: [
-        .library(name: "media_metadata_plus", targets: ["media_metadata_plus"])
+        .library(name: "media-metadata-plus", targets: ["media_metadata_plus"])
     ],
     targets: [
         .target(
