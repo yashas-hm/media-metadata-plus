@@ -1,6 +1,10 @@
+## 1.1.2
+
+* Moved `Package.swift` to `macos/media_metadata_plus/` and `ios/media_metadata_plus/` — correct location expected by Flutter's Swift Package Manager tooling.
+
 ## 1.1.1
 
-* Fix pubignore
+* Fixed `.pubignore` — `lib/src/rust/` (generated Dart FFI bindings) was incorrectly excluded from the published package, causing static analysis errors and 0 platform support on pub.dev.
 
 ## 1.1.0
 

@@ -11,8 +11,8 @@ let package = Package(
         .target(
             name: "media_metadata_plus",
             dependencies: ["MediaMetadataPlusRust"],
-            path: "Classes",
-            resources: [.process("../Resources/PrivacyInfo.xcprivacy")]
+            path: "../Classes",
+            resources: [.process("../../Resources/PrivacyInfo.xcprivacy")]
         ),
         .binaryTarget(
             name: "MediaMetadataPlusRust",

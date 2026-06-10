@@ -171,10 +171,10 @@ jobs:
           IOS_SUM:   ${{ steps.sums.outputs.ios }}
         run: |
           BASE="https://github.com/yashas-hm/media-metadata-plus/releases/download/${VERSION}"
-          sed -i "s|url: \".*macos.*\"|url: \"${BASE}/macos_${VERSION}.xcframework.zip\"|"  macos/Package.swift
-          sed -i "s|checksum: \".*\" // macos|checksum: \"${MACOS_SUM}\" // macos|"         macos/Package.swift
-          sed -i "s|url: \".*ios.*\"|url: \"${BASE}/ios_${VERSION}.xcframework.zip\"|"      ios/Package.swift
-          sed -i "s|checksum: \".*\" // ios|checksum: \"${IOS_SUM}\" // ios|"               ios/Package.swift
+          sed -i "s|url: \".*macos.*\"|url: \"${BASE}/macos_${VERSION}.xcframework.zip\"|"  macos/media_metadata_plus/Package.swift
+          sed -i "s|checksum: \".*\" // macos|checksum: \"${MACOS_SUM}\" // macos|"         macos/media_metadata_plus/Package.swift
+          sed -i "s|url: \".*ios.*\"|url: \"${BASE}/ios_${VERSION}.xcframework.zip\"|"      ios/media_metadata_plus/Package.swift
+          sed -i "s|checksum: \".*\" // ios|checksum: \"${IOS_SUM}\" // ios|"               ios/media_metadata_plus/Package.swift
 
       - name: Cleanup zips
         run: rm -f macos_*.xcframework.zip ios_*.xcframework.zip
@@ -184,7 +184,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add macos/Package.swift ios/Package.swift
+          git add macos/media_metadata_plus/Package.swift ios/media_metadata_plus/Package.swift
           git commit -m "chore: update SPM checksums for ${{ github.ref_name }}"
           git push origin HEAD:main
 
