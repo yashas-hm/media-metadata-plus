@@ -14,11 +14,29 @@ lipo -create \
 
 # CocoaPods rejects xcframeworks with raw .dylib slices — wrap in a .framework first
 FW="target/macos-universal/release/media_metadata_plus.framework"
-mkdir -p "$FW/Versions/A"
+mkdir -p "$FW/Versions/A/Resources"
 cp target/macos-universal/release/libmedia_metadata_plus.dylib \
    "$FW/Versions/A/media_metadata_plus"
-ln -sf Versions/A/media_metadata_plus "$FW/media_metadata_plus"
-ln -sf A "$FW/Versions/Current"
+
+# Info.plist is required for codesign to recognize this as a valid bundle
+cat > "$FW/Versions/A/Resources/Info.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key>       <string>media_metadata_plus</string>
+  <key>CFBundleIdentifier</key>       <string>dev.yashashm.media-metadata-plus</string>
+  <key>CFBundleInfoDictionaryVersion</key> <string>6.0</string>
+  <key>CFBundlePackageType</key>      <string>FMWK</string>
+  <key>CFBundleVersion</key>          <string>1</string>
+  <key>CFBundleShortVersionString</key> <string>1.0</string>
+</dict>
+</plist>
+PLIST
+
+ln -sf A                                    "$FW/Versions/Current"
+ln -sf "Versions/Current/media_metadata_plus" "$FW/media_metadata_plus"
+ln -sf "Versions/Current/Resources"          "$FW/Resources"
 install_name_tool -id "@rpath/media_metadata_plus.framework/media_metadata_plus" \
   "$FW/Versions/A/media_metadata_plus"
 

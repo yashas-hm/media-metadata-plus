@@ -162,7 +162,7 @@ jobs:
 
       - name: Ensure tag exists
         run: |
-          TAG="v${{ env.VERSION }}"
+          TAG="${{ env.VERSION }}"
           git fetch --tags
           if ! git rev-parse "$TAG" >/dev/null 2>&1; then
             git config user.name  "github-actions[bot]"
@@ -175,8 +175,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.VERSION }}
-          name: v${{ env.VERSION }}
+          tag_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
           files: |
             macos_${{ env.VERSION }}.xcframework.zip
             ios_${{ env.VERSION }}.xcframework.zip
