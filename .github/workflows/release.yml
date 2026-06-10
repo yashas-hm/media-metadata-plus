@@ -48,9 +48,9 @@ jobs:
       - name: Zip xcframeworks
         run: |
           cd macos/Frameworks
-          zip -r "../../macos_${{ env.VERSION }}.xcframework.zip" media_metadata_plus.xcframework
+          zip -r -y "../../macos_${{ env.VERSION }}.xcframework.zip" media_metadata_plus.xcframework
           cd ../../ios/Frameworks
-          zip -r "../../ios_${{ env.VERSION }}.xcframework.zip" media_metadata_plus.xcframework
+          zip -r -y "../../ios_${{ env.VERSION }}.xcframework.zip" media_metadata_plus.xcframework
 
       - uses: actions/upload-artifact@v4
         with:

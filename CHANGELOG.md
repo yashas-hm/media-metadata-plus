@@ -1,13 +1,6 @@
-## 2.0.2
+## 1.1.0
 
 * Added Info.plist and Resources symlink to macOS framework for codesign
-
-## 2.0.1
-
-* Fix SPM issues
-
-## 2.0.0
-
 * Pre-built native binaries are now shipped with the package — consumers no longer need Rust or any native toolchain installed.
 * Added Swift Package Manager (SPM) support for iOS and macOS via `Package.swift` with pre-built xcframework binary targets.
 * Fixed `.pubignore` — `lib/src/rust/` (generated Dart FFI bindings) was incorrectly excluded from the published package, causing static analysis errors and 0 platform support on pub.dev.
