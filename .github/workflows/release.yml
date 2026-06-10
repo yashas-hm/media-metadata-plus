@@ -188,10 +188,12 @@ jobs:
           git push origin HEAD:main
 
       # Publish to pub.dev — binaries + stamped Package.swift are in the tarball
-      - uses: dart-lang/setup-dart@v1.7.0
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
 
       - name: Validate package (dry run)
-        run: dart pub publish --dry-run
+        run: flutter pub publish --dry-run
 
       - name: Publish to pub.dev
-        run: dart pub publish --force
+        run: flutter pub publish --force
