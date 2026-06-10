@@ -1,3 +1,7 @@
+## 2.0.2
+
+* Added Info.plist and Resources symlink to macOS framework for codesign
+
 ## 2.0.1
 
 * Fix SPM issues
