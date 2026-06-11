@@ -1,4 +1,4 @@
-## 1.1.0
+## 1.2.0
 
 * Added Info.plist and Resources symlink to macOS framework for codesign
 * Pre-built native binaries are now shipped with the package — consumers no longer need Rust or any native toolchain installed.
