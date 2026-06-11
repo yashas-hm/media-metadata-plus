@@ -20,6 +20,7 @@ class MediaMeta {
   final int? width;
   final int? height;
   final PlatformInt64? capturedAtMs;
+  final PlatformInt64? modifiedAtMs;
   final String? cameraMake;
   final String? cameraModel;
   final double? latitude;
@@ -32,6 +33,7 @@ class MediaMeta {
     this.width,
     this.height,
     this.capturedAtMs,
+    this.modifiedAtMs,
     this.cameraMake,
     this.cameraModel,
     this.latitude,
@@ -46,6 +48,7 @@ class MediaMeta {
       width.hashCode ^
       height.hashCode ^
       capturedAtMs.hashCode ^
+      modifiedAtMs.hashCode ^
       cameraMake.hashCode ^
       cameraModel.hashCode ^
       latitude.hashCode ^
@@ -62,6 +65,7 @@ class MediaMeta {
           width == other.width &&
           height == other.height &&
           capturedAtMs == other.capturedAtMs &&
+          modifiedAtMs == other.modifiedAtMs &&
           cameraMake == other.cameraMake &&
           cameraModel == other.cameraModel &&
           latitude == other.latitude &&

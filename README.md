@@ -7,17 +7,17 @@ A cross-platform Flutter plugin for reading media metadata from images, RAW file
 
 ## Supported formats
 
-| Format          | Metadata                                                         |
-|-----------------|------------------------------------------------------------------|
-| JPEG / JPG      | Capture time, dimensions, camera, GPS                            |
-| HEIC / HEIF     | Capture time, dimensions, camera, GPS                            |
-| PNG             | Capture time, dimensions                                         |
-| WebP            | Capture time, dimensions, camera, GPS                            |
-| TIFF            | Capture time, dimensions, camera, GPS                            |
-| DNG / NEF / ARW | Capture time, dimensions, camera, GPS (reported as `image/tiff`) |
-| CR2             | Capture time, dimensions, camera, GPS                            |
-| MP4             | Duration, dimensions, creation time, GPS, camera                 |
-| MOV             | Duration, dimensions, creation time, GPS, camera                 |
+| Format          | Metadata                                                                      |
+|-----------------|-------------------------------------------------------------------------------|
+| JPEG / JPG      | Capture time, modified time, dimensions, camera, GPS                          |
+| HEIC / HEIF     | Capture time, modified time, dimensions, camera, GPS                          |
+| PNG             | Capture time, modified time, dimensions                                       |
+| WebP            | Capture time, modified time, dimensions, camera, GPS                          |
+| TIFF            | Capture time, modified time, dimensions, camera, GPS                          |
+| DNG / NEF / ARW | Capture time, modified time, dimensions, camera, GPS (reported as `image/tiff`) |
+| CR2             | Capture time, modified time, dimensions, camera, GPS                          |
+| MP4             | Duration, dimensions, creation time, modified time, GPS, camera               |
+| MOV             | Duration, dimensions, creation time, modified time, GPS, camera               |
 
 ## Platform support
 
@@ -47,6 +47,7 @@ void main() async {
   print(meta?.width); // 4032
   print(meta?.height); // 3024
   print(meta?.capturedAt); // 2024-03-15 10:30:00.000Z
+  print(meta?.modifiedAt); // 2024-03-16 08:00:00.000Z
   print(meta?.cameraMake); // "Apple"
   print(meta?.cameraModel); // "iPhone 15 Pro"
   print(meta?.gps?.lat); // 37.42195
@@ -64,16 +65,17 @@ No initialisation call required. The Rust library is loaded automatically on fir
 
 ### `MediaMetadata`
 
-| Field         | Type              | Description         |
-|---------------|-------------------|---------------------|
-| `mimeType`    | `String`          | Detected MIME type  |
-| `width`       | `int?`            | Width in pixels     |
-| `height`      | `int?`            | Height in pixels    |
-| `capturedAt`  | `DateTime?`       | Capture time in UTC |
-| `cameraMake`  | `String?`         | Camera manufacturer |
-| `cameraModel` | `String?`         | Camera model        |
-| `gps`         | `GpsCoordinates?` | Location            |
-| `duration`    | `Duration?`       | Video duration      |
+| Field         | Type              | Description                              |
+|---------------|-------------------|------------------------------------------|
+| `mimeType`    | `String`          | Detected MIME type                       |
+| `width`       | `int?`            | Width in pixels                          |
+| `height`      | `int?`            | Height in pixels                         |
+| `capturedAt`  | `DateTime?`       | Capture time in UTC                      |
+| `modifiedAt`  | `DateTime?`       | Last-modified time in UTC                |
+| `cameraMake`  | `String?`         | Camera manufacturer                      |
+| `cameraModel` | `String?`         | Camera model                             |
+| `gps`         | `GpsCoordinates?` | Location                                 |
+| `duration`    | `Duration?`       | Video duration                           |
 
 ### `GpsCoordinates`
 

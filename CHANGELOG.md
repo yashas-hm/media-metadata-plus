@@ -1,3 +1,8 @@
+## 1.3.0
+
+* Added `modifiedAt` field (`DateTime?`) — last-modified timestamp in UTC. Source is the EXIF `DateTime` tag for images and `mvhd.modification_time` for MP4/MOV.
+* Improved video camera make/model coverage: now tries three atom paths in order — iTunes (`moov > udta > meta > ilst`), 3GPP (`moov > udta > ©mak/©mod` with length/language header), and iTunes-without-udta (`moov > meta > ilst`). Covers Apple, Android, and most third-party cameras.
+
 ## 1.2.1
 
 * Fixed rust reader orientation calculation

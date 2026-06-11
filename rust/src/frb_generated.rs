@@ -191,6 +191,7 @@ impl SseDecode for crate::api::MediaMeta {
         let mut var_width = <Option<u32>>::sse_decode(deserializer);
         let mut var_height = <Option<u32>>::sse_decode(deserializer);
         let mut var_capturedAtMs = <Option<i64>>::sse_decode(deserializer);
+        let mut var_modifiedAtMs = <Option<i64>>::sse_decode(deserializer);
         let mut var_cameraMake = <Option<String>>::sse_decode(deserializer);
         let mut var_cameraModel = <Option<String>>::sse_decode(deserializer);
         let mut var_latitude = <Option<f64>>::sse_decode(deserializer);
@@ -202,6 +203,7 @@ impl SseDecode for crate::api::MediaMeta {
             width: var_width,
             height: var_height,
             captured_at_ms: var_capturedAtMs,
+            modified_at_ms: var_modifiedAtMs,
             camera_make: var_cameraMake,
             camera_model: var_cameraModel,
             latitude: var_latitude,
@@ -355,6 +357,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::MediaMeta {
             self.width.into_into_dart().into_dart(),
             self.height.into_into_dart().into_dart(),
             self.captured_at_ms.into_into_dart().into_dart(),
+            self.modified_at_ms.into_into_dart().into_dart(),
             self.camera_make.into_into_dart().into_dart(),
             self.camera_model.into_into_dart().into_dart(),
             self.latitude.into_into_dart().into_dart(),
@@ -437,6 +440,7 @@ impl SseEncode for crate::api::MediaMeta {
         <Option<u32>>::sse_encode(self.width, serializer);
         <Option<u32>>::sse_encode(self.height, serializer);
         <Option<i64>>::sse_encode(self.captured_at_ms, serializer);
+        <Option<i64>>::sse_encode(self.modified_at_ms, serializer);
         <Option<String>>::sse_encode(self.camera_make, serializer);
         <Option<String>>::sse_encode(self.camera_model, serializer);
         <Option<f64>>::sse_encode(self.latitude, serializer);

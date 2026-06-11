@@ -3,6 +3,7 @@ pub struct MediaMeta {
     pub width: Option<u32>,
     pub height: Option<u32>,
     pub captured_at_ms: Option<i64>,
+    pub modified_at_ms: Option<i64>,
     pub camera_make: Option<String>,
     pub camera_model: Option<String>,
     pub latitude: Option<f64>,

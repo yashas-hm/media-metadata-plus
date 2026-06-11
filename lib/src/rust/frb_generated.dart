@@ -223,19 +223,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   MediaMeta dco_decode_media_meta(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 10)
-      throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
+    if (arr.length != 11)
+      throw Exception('unexpected arr length: expect 11 but see ${arr.length}');
     return MediaMeta(
       mimeType: dco_decode_String(arr[0]),
       width: dco_decode_opt_box_autoadd_u_32(arr[1]),
       height: dco_decode_opt_box_autoadd_u_32(arr[2]),
       capturedAtMs: dco_decode_opt_box_autoadd_i_64(arr[3]),
-      cameraMake: dco_decode_opt_String(arr[4]),
-      cameraModel: dco_decode_opt_String(arr[5]),
-      latitude: dco_decode_opt_box_autoadd_f_64(arr[6]),
-      longitude: dco_decode_opt_box_autoadd_f_64(arr[7]),
-      altitude: dco_decode_opt_box_autoadd_f_64(arr[8]),
-      durationMs: dco_decode_opt_box_autoadd_u_64(arr[9]),
+      modifiedAtMs: dco_decode_opt_box_autoadd_i_64(arr[4]),
+      cameraMake: dco_decode_opt_String(arr[5]),
+      cameraModel: dco_decode_opt_String(arr[6]),
+      latitude: dco_decode_opt_box_autoadd_f_64(arr[7]),
+      longitude: dco_decode_opt_box_autoadd_f_64(arr[8]),
+      altitude: dco_decode_opt_box_autoadd_f_64(arr[9]),
+      durationMs: dco_decode_opt_box_autoadd_u_64(arr[10]),
     );
   }
 
@@ -394,6 +395,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_width = sse_decode_opt_box_autoadd_u_32(deserializer);
     var var_height = sse_decode_opt_box_autoadd_u_32(deserializer);
     var var_capturedAtMs = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_modifiedAtMs = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_cameraMake = sse_decode_opt_String(deserializer);
     var var_cameraModel = sse_decode_opt_String(deserializer);
     var var_latitude = sse_decode_opt_box_autoadd_f_64(deserializer);
@@ -405,6 +407,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         width: var_width,
         height: var_height,
         capturedAtMs: var_capturedAtMs,
+        modifiedAtMs: var_modifiedAtMs,
         cameraMake: var_cameraMake,
         cameraModel: var_cameraModel,
         latitude: var_latitude,
@@ -606,6 +609,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_u_32(self.width, serializer);
     sse_encode_opt_box_autoadd_u_32(self.height, serializer);
     sse_encode_opt_box_autoadd_i_64(self.capturedAtMs, serializer);
+    sse_encode_opt_box_autoadd_i_64(self.modifiedAtMs, serializer);
     sse_encode_opt_String(self.cameraMake, serializer);
     sse_encode_opt_String(self.cameraModel, serializer);
     sse_encode_opt_box_autoadd_f_64(self.latitude, serializer);

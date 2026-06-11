@@ -31,6 +31,7 @@ pub fn read(path: &Path, mime: &str) -> anyhow::Result<MediaMeta> {
                 width,
                 height,
                 captured_at_ms: read_date(&exif),
+                modified_at_ms: read_str_date(&exif, exif::Tag::DateTime),
                 camera_make: read_str(&exif, exif::Tag::Make),
                 camera_model: read_str(&exif, exif::Tag::Model),
                 latitude: read_gps_lat(&exif),
@@ -50,6 +51,7 @@ pub fn read(path: &Path, mime: &str) -> anyhow::Result<MediaMeta> {
                 width,
                 height,
                 captured_at_ms: None,
+                modified_at_ms: None,
                 camera_make: None,
                 camera_model: None,
                 latitude: None,
@@ -136,6 +138,17 @@ fn read_date(exif: &exif::Exif) -> Option<i64> {
                         return Some(ms);
                     }
                 }
+            }
+        }
+    }
+    None
+}
+
+fn read_str_date(exif: &exif::Exif, tag: exif::Tag) -> Option<i64> {
+    if let Some(field) = exif.get_field(tag, exif::In::PRIMARY) {
+        if let exif::Value::Ascii(ref v) = field.value {
+            if let Some(s) = v.first() {
+                return parse_exif_datetime(s).ok();
             }
         }
     }

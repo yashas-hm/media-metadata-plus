@@ -26,6 +26,9 @@ class MediaMetadata {
   /// Capture timestamp in UTC, from EXIF DateTimeOriginal or MP4 creation time.
   final DateTime? capturedAt;
 
+  /// Last-modified timestamp in UTC, from EXIF DateTime or MP4 modification time.
+  final DateTime? modifiedAt;
+
   /// Camera manufacturer, e.g. `Apple`.
   final String? cameraMake;
 
@@ -43,6 +46,7 @@ class MediaMetadata {
     this.width,
     this.height,
     this.capturedAt,
+    this.modifiedAt,
     this.cameraMake,
     this.cameraModel,
     this.gps,
@@ -104,6 +108,12 @@ class MediaMetadata {
                 isUtc: true,
               )
             : null,
+        modifiedAt: raw.modifiedAtMs != null
+            ? DateTime.fromMillisecondsSinceEpoch(
+                raw.modifiedAtMs!.toInt(),
+                isUtc: true,
+              )
+            : null,
         cameraMake: raw.cameraMake,
         cameraModel: raw.cameraModel,
         gps: (raw.latitude != null && raw.longitude != null)
@@ -122,7 +132,7 @@ class MediaMetadata {
   String toString() => 'MediaMetadata('
       'mimeType: $mimeType, '
       'width: $width, height: $height, '
-      'capturedAt: $capturedAt, '
+      'capturedAt: $capturedAt, modifiedAt: $modifiedAt, '
       'camera: $cameraMake $cameraModel, '
       'gps: $gps, duration: $duration)';
 }
