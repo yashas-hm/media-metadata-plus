@@ -1,3 +1,7 @@
+## 1.2.1
+
+* Fixed rust reader orientation calculation
+
 ## 1.2.0
 
 * Added Info.plist and Resources symlink to macOS framework for codesign

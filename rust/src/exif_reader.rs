@@ -11,6 +11,13 @@ pub fn read(path: &Path, mime: &str) -> anyhow::Result<MediaMeta> {
             let mut width = read_u32(&exif, exif::Tag::ImageWidth);
             let mut height = read_u32(&exif, exif::Tag::ImageLength);
 
+            // Orientation 5-8 means the image is rotated 90° or 270°, so
+            // the stored pixel dimensions are transposed relative to display.
+            let orientation = read_u32(&exif, exif::Tag::Orientation).unwrap_or(1);
+            if matches!(orientation, 5 | 6 | 7 | 8) {
+                std::mem::swap(&mut width, &mut height);
+            }
+
             // WebP: EXIF dimension tags are optional — fall back to bitstream
             if mime == "image/webp" && (width.is_none() || height.is_none()) {
                 if let Some((w, h)) = webp_dimensions(path) {
