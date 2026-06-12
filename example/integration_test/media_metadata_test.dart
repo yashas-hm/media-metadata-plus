@@ -124,4 +124,54 @@ void main() {
     final meta = await MediaMetadata.read(_fixture('corrupt.jpg'));
     expect(meta, isNull);
   });
+
+  group('generateThumbnail', () {
+    testWidgets('returns JPEG bytes from embedded covr atom', (_) async {
+      final bytes =
+          await MediaMetadata.generateThumbnail(_fixture('video_covr.mp4'));
+      expect(bytes, isNotNull);
+      // JPEG magic bytes: FF D8
+      expect(bytes![0], 0xFF);
+      expect(bytes[1], 0xD8);
+    });
+
+    testWidgets('returns null when no covr atom is present', (_) async {
+      final bytes =
+          await MediaMetadata.generateThumbnail(_fixture('video.mp4'));
+      expect(bytes, isNull);
+    });
+
+    testWidgets('returns null for image files', (_) async {
+      final bytes =
+          await MediaMetadata.generateThumbnail(_fixture('photo.jpg'));
+      expect(bytes, isNull);
+    });
+
+    testWidgets('writes bytes to savePath when provided', (_) async {
+      final dir = Directory.systemTemp.createTempSync('thumb_test_');
+      final savePath = '${dir.path}/thumb.jpg';
+      try {
+        final bytes = await MediaMetadata.generateThumbnail(
+          _fixture('video_covr.mp4'),
+          savePath: savePath,
+        );
+        expect(bytes, isNotNull);
+        final saved = File(savePath);
+        expect(saved.existsSync(), isTrue);
+        expect(saved.readAsBytesSync(), bytes);
+      } finally {
+        dir.deleteSync(recursive: true);
+      }
+    });
+
+    testWidgets('timeMs parameter is accepted without error', (_) async {
+      // timeMs has no effect in Phase 1 (covr atom is position-independent)
+      // but must not throw
+      final bytes = await MediaMetadata.generateThumbnail(
+        _fixture('video_covr.mp4'),
+        timeMs: 5000,
+      );
+      expect(bytes, isNotNull);
+    });
+  });
 }
