@@ -1,0 +1,310 @@
+name: Build Prebuilt FFmpeg
+
+# Run manually when you want to ship a new FFmpeg version.
+# The resulting GitHub release (tagged ffmpeg-prebuilt-<tag>) is consumed by
+# the main release workflow via FFMPEG_DIR on each build runner.
+on:
+  workflow_dispatch:
+    inputs:
+      ffmpeg_tag:
+        description: 'FFmpeg git tag to build (e.g. n7.1.1)'
+        required: true
+        default: 'n7.1.1'
+
+# Minimal FFmpeg — only what thumbnail extraction needs.
+# Shared across all configure calls via an env variable.
+env:
+  FF_FLAGS: >-
+    --enable-static
+    --disable-shared
+    --disable-everything
+    --disable-programs
+    --disable-doc
+    --disable-avdevice
+    --disable-avfilter
+    --disable-swresample
+    --disable-postproc
+    --enable-demuxer=mov
+    --enable-decoder=h264,hevc,vp9,av1,mpeg4
+    --enable-protocol=file
+    --enable-swscale
+
+jobs:
+  # ── macOS + iOS ──────────────────────────────────────────────────────────────
+  build-apple:
+    name: Build Apple (macOS + iOS)
+    runs-on: macos-latest
+    steps:
+      - name: Install build tools
+        run: brew install nasm
+
+      - name: Clone FFmpeg
+        run: |
+          git clone --depth 1 \
+            --branch ${{ github.event.inputs.ffmpeg_tag }} \
+            https://github.com/FFmpeg/FFmpeg.git ffmpeg-src
+
+      - name: Build macOS arm64
+        run: |
+          cd ffmpeg-src
+          ./configure ${{ env.FF_FLAGS }} \
+            --prefix=${{ github.workspace }}/out/aarch64-apple-darwin \
+            --arch=arm64 --target-os=darwin --cc=clang \
+            --extra-cflags="-arch arm64 -mmacosx-version-min=10.14" \
+            --extra-ldflags="-arch arm64 -mmacosx-version-min=10.14"
+          make -j$(sysctl -n hw.ncpu) install
+
+      - name: Build macOS x86_64
+        run: |
+          cd ffmpeg-src && make distclean
+          ./configure ${{ env.FF_FLAGS }} \
+            --prefix=${{ github.workspace }}/out/x86_64-apple-darwin \
+            --arch=x86_64 --target-os=darwin --cc=clang \
+            --extra-cflags="-arch x86_64 -mmacosx-version-min=10.14" \
+            --extra-ldflags="-arch x86_64 -mmacosx-version-min=10.14"
+          make -j$(sysctl -n hw.ncpu) install
+
+      - name: Build iOS device arm64
+        run: |
+          IOS_SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          cd ffmpeg-src && make distclean
+          ./configure ${{ env.FF_FLAGS }} \
+            --prefix=${{ github.workspace }}/out/aarch64-apple-ios \
+            --arch=arm64 --target-os=darwin --cc=clang \
+            --sysroot="$IOS_SDK" \
+            --extra-cflags="-arch arm64 -mios-version-min=14.0" \
+            --extra-ldflags="-arch arm64 -mios-version-min=14.0" \
+            --disable-asm
+          make -j$(sysctl -n hw.ncpu) install
+
+      - name: Build iOS simulator arm64
+        run: |
+          SIM_SDK=$(xcrun --sdk iphonesimulator --show-sdk-path)
+          cd ffmpeg-src && make distclean
+          ./configure ${{ env.FF_FLAGS }} \
+            --prefix=${{ github.workspace }}/out/aarch64-apple-ios-sim \
+            --arch=arm64 --target-os=darwin --cc=clang \
+            --sysroot="$SIM_SDK" \
+            --extra-cflags="-arch arm64 -target aarch64-apple-ios14.0-simulator" \
+            --extra-ldflags="-arch arm64 -target aarch64-apple-ios14.0-simulator" \
+            --disable-asm
+          make -j$(sysctl -n hw.ncpu) install
+
+      - name: Build iOS simulator x86_64
+        run: |
+          SIM_SDK=$(xcrun --sdk iphonesimulator --show-sdk-path)
+          cd ffmpeg-src && make distclean
+          ./configure ${{ env.FF_FLAGS }} \
+            --prefix=${{ github.workspace }}/out/x86_64-apple-ios \
+            --arch=x86_64 --target-os=darwin --cc=clang \
+            --sysroot="$SIM_SDK" \
+            --extra-cflags="-arch x86_64 -target x86_64-apple-ios14.0-simulator" \
+            --extra-ldflags="-arch x86_64 -target x86_64-apple-ios14.0-simulator"
+          make -j$(sysctl -n hw.ncpu) install
+
+      - name: Zip artifacts
+        run: |
+          cd ${{ github.workspace }}/out
+          for target in */; do
+            zip -r "${{ github.workspace }}/${target%/}.zip" "$target"
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-apple
+          path: '*.zip'
+
+  # ── Linux + Android ──────────────────────────────────────────────────────────
+  build-linux-android:
+    name: Build Linux + Android
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y nasm yasm zip
+
+      - name: Setup Android NDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'ndk;27.0.12077973'
+
+      - name: Clone FFmpeg
+        run: |
+          git clone --depth 1 \
+            --branch ${{ github.event.inputs.ffmpeg_tag }} \
+            https://github.com/FFmpeg/FFmpeg.git ffmpeg-src
+
+      - name: Build Linux x86_64
+        run: |
+          cd ffmpeg-src
+          ./configure ${{ env.FF_FLAGS }} \
+            --prefix=${{ github.workspace }}/out/x86_64-unknown-linux-gnu \
+            --arch=x86_64 --target-os=linux \
+            --extra-cflags="-fPIC"
+          make -j$(nproc) install
+
+      - name: Build Android arm64
+        run: |
+          TC=$ANDROID_HOME/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64
+          cd ffmpeg-src && make distclean
+          ./configure ${{ env.FF_FLAGS }} \
+            --prefix=${{ github.workspace }}/out/aarch64-linux-android \
+            --target-os=android --arch=arm64 --enable-cross-compile \
+            --cc=$TC/bin/aarch64-linux-android21-clang \
+            --cxx=$TC/bin/aarch64-linux-android21-clang++ \
+            --ar=$TC/bin/llvm-ar --nm=$TC/bin/llvm-nm \
+            --ranlib=$TC/bin/llvm-ranlib --strip=$TC/bin/llvm-strip \
+            --sysroot=$TC/sysroot \
+            --extra-cflags="-fPIC" --disable-asm
+          make -j$(nproc) install
+
+      - name: Build Android armeabi-v7a
+        run: |
+          TC=$ANDROID_HOME/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64
+          cd ffmpeg-src && make distclean
+          ./configure ${{ env.FF_FLAGS }} \
+            --prefix=${{ github.workspace }}/out/armv7-linux-androideabi \
+            --target-os=android --arch=arm --enable-cross-compile \
+            --cc=$TC/bin/armv7a-linux-androideabi21-clang \
+            --cxx=$TC/bin/armv7a-linux-androideabi21-clang++ \
+            --ar=$TC/bin/llvm-ar --nm=$TC/bin/llvm-nm \
+            --ranlib=$TC/bin/llvm-ranlib --strip=$TC/bin/llvm-strip \
+            --sysroot=$TC/sysroot \
+            --extra-cflags="-march=armv7-a -mfpu=neon -mfloat-abi=softfp -fPIC" \
+            --disable-asm
+          make -j$(nproc) install
+
+      - name: Build Android x86_64
+        run: |
+          TC=$ANDROID_HOME/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64
+          cd ffmpeg-src && make distclean
+          ./configure ${{ env.FF_FLAGS }} \
+            --prefix=${{ github.workspace }}/out/x86_64-linux-android \
+            --target-os=android --arch=x86_64 --enable-cross-compile \
+            --cc=$TC/bin/x86_64-linux-android21-clang \
+            --cxx=$TC/bin/x86_64-linux-android21-clang++ \
+            --ar=$TC/bin/llvm-ar --nm=$TC/bin/llvm-nm \
+            --ranlib=$TC/bin/llvm-ranlib --strip=$TC/bin/llvm-strip \
+            --sysroot=$TC/sysroot \
+            --extra-cflags="-fPIC" --disable-asm
+          make -j$(nproc) install
+
+      - name: Build Android x86
+        run: |
+          TC=$ANDROID_HOME/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64
+          cd ffmpeg-src && make distclean
+          ./configure ${{ env.FF_FLAGS }} \
+            --prefix=${{ github.workspace }}/out/i686-linux-android \
+            --target-os=android --arch=x86 --enable-cross-compile \
+            --cc=$TC/bin/i686-linux-android21-clang \
+            --cxx=$TC/bin/i686-linux-android21-clang++ \
+            --ar=$TC/bin/llvm-ar --nm=$TC/bin/llvm-nm \
+            --ranlib=$TC/bin/llvm-ranlib --strip=$TC/bin/llvm-strip \
+            --sysroot=$TC/sysroot \
+            --extra-cflags="-fPIC" --disable-asm
+          make -j$(nproc) install
+
+      - name: Zip artifacts
+        run: |
+          cd ${{ github.workspace }}/out
+          for target in */; do
+            zip -r "${{ github.workspace }}/${target%/}.zip" "$target"
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-linux-android
+          path: '*.zip'
+
+  # ── Windows ──────────────────────────────────────────────────────────────────
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            base-devel
+            mingw-w64-ucrt-x86_64-gcc
+            nasm
+            make
+            diffutils
+            zip
+            git
+
+      - name: Clone FFmpeg
+        run: |
+          git clone --depth 1 \
+            --branch ${{ github.event.inputs.ffmpeg_tag }} \
+            https://github.com/FFmpeg/FFmpeg.git ffmpeg-src
+
+      - name: Build Windows x86_64
+        run: |
+          OUT="$(cygpath '${{ github.workspace }}')/out/x86_64-pc-windows-gnu"
+          mkdir -p "$OUT"
+          cd ffmpeg-src
+          ./configure ${{ env.FF_FLAGS }} \
+            --prefix="$OUT" \
+            --arch=x86_64 --target-os=mingw32 --toolchain=gcc
+          make -j$(nproc) install
+
+      - name: Zip artifacts
+        run: |
+          cd "$(cygpath '${{ github.workspace }}')/out"
+          zip -r "${{ github.workspace }}/x86_64-pc-windows-gnu.zip" x86_64-pc-windows-gnu
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-windows
+          path: '*.zip'
+
+  # ── GitHub Release ───────────────────────────────────────────────────────────
+  release:
+    name: Create Release
+    needs: [build-apple, build-linux-android, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ffmpeg-prebuilt-${{ github.event.inputs.ffmpeg_tag }}
+          name: FFmpeg Prebuilt ${{ github.event.inputs.ffmpeg_tag }}
+          body: |
+            Minimal static FFmpeg libraries for all supported Rust targets.
+
+            **FFmpeg version:** `${{ github.event.inputs.ffmpeg_tag }}`
+
+            **Included:**
+            - Demuxer: `mov` (covers `.mp4` and `.mov`)
+            - Decoders: `h264`, `hevc`, `vp9`, `av1`, `mpeg4`
+            - `libswscale`
+
+            | Zip | Rust target |
+            |---|---|
+            | `aarch64-apple-darwin.zip` | macOS Apple Silicon |
+            | `x86_64-apple-darwin.zip` | macOS Intel |
+            | `aarch64-apple-ios.zip` | iOS device |
+            | `aarch64-apple-ios-sim.zip` | iOS simulator (Apple Silicon) |
+            | `x86_64-apple-ios.zip` | iOS simulator (Intel) |
+            | `x86_64-unknown-linux-gnu.zip` | Linux x86_64 |
+            | `aarch64-linux-android.zip` | Android arm64-v8a |
+            | `armv7-linux-androideabi.zip` | Android armeabi-v7a |
+            | `x86_64-linux-android.zip` | Android x86_64 |
+            | `i686-linux-android.zip` | Android x86 |
+            | `x86_64-pc-windows-gnu.zip` | Windows x86_64 |
+
+            To use: download the zip for each target, unzip, and set
+            `FFMPEG_DIR=/path/to/unzipped` before `cargo build`.
+          files: artifacts/*.zip
+          fail_on_unmatched_files: true

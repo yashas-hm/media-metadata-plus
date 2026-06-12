@@ -3,8 +3,19 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../" && pwd)"
 cd "$REPO/rust"
 
-cargo build --release --target aarch64-apple-darwin
-cargo build --release --target x86_64-apple-darwin
+# If FFMPEG_PREBUILT_DIR is set (CI), point each build at the matching target dir.
+# Otherwise cargo finds FFmpeg via pkg-config (local: brew install ffmpeg pkg-config).
+cargo_build() {
+  local target="$1"
+  if [[ -n "${FFMPEG_PREBUILT_DIR:-}" ]]; then
+    FFMPEG_DIR="${FFMPEG_PREBUILT_DIR}/${target}" cargo build --release --target "$target"
+  else
+    cargo build --release --target "$target"
+  fi
+}
+
+cargo_build aarch64-apple-darwin
+cargo_build x86_64-apple-darwin
 
 mkdir -p target/macos-universal/release
 lipo -create \

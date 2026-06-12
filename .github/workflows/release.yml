@@ -10,6 +10,11 @@ on:
         description: 'Version tag (e.g. v2.0.0)'
         required: true
         type: string
+      ffmpeg_prebuilt_tag:
+        description: 'FFmpeg prebuilt release tag (e.g. n7.1.1)'
+        required: true
+        default: 'n7.1.1'
+        type: string
       publish:
         description: 'Publish to pub.dev after releasing'
         required: false
@@ -18,6 +23,7 @@ on:
 
 env:
   VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+  FFMPEG_PREBUILT_BASE: https://github.com/yashas-hm/media-metadata-plus/releases/download/ffmpeg-prebuilt-${{ github.event_name == 'workflow_dispatch' && inputs.ffmpeg_prebuilt_tag || 'n7.1.1' }}
 
 permissions:
   contents: write   # create GitHub Release + push Package.swift commit
@@ -39,10 +45,28 @@ jobs:
           rustup target add aarch64-apple-ios-sim
           rustup target add x86_64-apple-ios
 
+      - name: Download prebuilt FFmpeg
+        run: |
+          mkdir -p ffmpeg-prebuilt
+          for target in \
+            aarch64-apple-darwin \
+            x86_64-apple-darwin \
+            aarch64-apple-ios \
+            aarch64-apple-ios-sim \
+            x86_64-apple-ios; do
+            curl -fsSL "${{ env.FFMPEG_PREBUILT_BASE }}/${target}.zip" -o "${target}.zip"
+            unzip -q "${target}.zip" -d ffmpeg-prebuilt
+            rm "${target}.zip"
+          done
+
       - name: Build macOS xcframework
+        env:
+          FFMPEG_PREBUILT_DIR: ${{ github.workspace }}/ffmpeg-prebuilt
         run: bash scripts/ci/build_macos.sh
 
       - name: Build iOS xcframework
+        env:
+          FFMPEG_PREBUILT_DIR: ${{ github.workspace }}/ffmpeg-prebuilt
         run: bash scripts/ci/build_ios.sh
 
       - name: Zip xcframeworks
@@ -87,7 +111,23 @@ jobs:
       - name: Install NDK
         run: sdkmanager "ndk;27.0.12077973"
 
+      - name: Download prebuilt FFmpeg
+        run: |
+          mkdir -p ffmpeg-prebuilt
+          for target in \
+            x86_64-unknown-linux-gnu \
+            aarch64-linux-android \
+            armv7-linux-androideabi \
+            x86_64-linux-android \
+            i686-linux-android; do
+            curl -fsSL "${{ env.FFMPEG_PREBUILT_BASE }}/${target}.zip" -o "${target}.zip"
+            unzip -q "${target}.zip" -d ffmpeg-prebuilt
+            rm "${target}.zip"
+          done
+
       - name: Build Linux .so
+        env:
+          FFMPEG_DIR: ${{ github.workspace }}/ffmpeg-prebuilt/x86_64-unknown-linux-gnu
         working-directory: rust
         run: cargo build --release --target x86_64-unknown-linux-gnu
 
@@ -95,12 +135,9 @@ jobs:
         run: cp rust/target/x86_64-unknown-linux-gnu/release/libmedia_metadata_plus.so linux/
 
       - name: Build Android .so (4 ABIs)
-        working-directory: rust
-        run: |
-          cargo ndk \
-            -t arm64-v8a -t armeabi-v7a -t x86_64 -t x86 \
-            -o ../android/src/main/jniLibs \
-            build --release
+        env:
+          FFMPEG_PREBUILT_DIR: ${{ github.workspace }}/ffmpeg-prebuilt
+        run: bash scripts/ci/build_android.sh
 
       - uses: actions/upload-artifact@v4
         with:
@@ -119,13 +156,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Rust GNU target
+        run: rustup target add x86_64-pc-windows-gnu
+
+      - name: Install MinGW toolchain
+        run: choco install mingw -y
+
+      - name: Download prebuilt FFmpeg
+        shell: pwsh
+        run: |
+          $url = "${{ env.FFMPEG_PREBUILT_BASE }}/x86_64-pc-windows-gnu.zip"
+          Invoke-WebRequest -Uri $url -OutFile ffmpeg.zip
+          Expand-Archive ffmpeg.zip -DestinationPath ffmpeg-prebuilt
+
       - name: Build Windows .dll
         working-directory: rust
-        run: cargo build --release --target x86_64-pc-windows-msvc
+        env:
+          FFMPEG_DIR: ${{ github.workspace }}\ffmpeg-prebuilt\x86_64-pc-windows-gnu
+        run: cargo build --release --target x86_64-pc-windows-gnu
 
       - name: Stage DLL
         shell: cmd
-        run: copy rust\target\x86_64-pc-windows-msvc\release\media_metadata_plus.dll windows\
+        run: copy rust\target\x86_64-pc-windows-gnu\release\media_metadata_plus.dll windows\
 
       - uses: actions/upload-artifact@v4
         with:
