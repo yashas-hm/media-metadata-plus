@@ -10,6 +10,23 @@ import 'frb_generated.dart';
 Future<MediaMeta> readMetadata({required String path}) =>
     RustLib.instance.api.crateApiReadMetadata(path: path);
 
+/// Extract a thumbnail from a video file, returning raw JPEG/PNG bytes.
+///
+/// For MP4 and MOV files, reads the embedded cover-art image from the file's
+/// `covr` iTunes atom without decoding any video frames. `time_ms` is accepted
+/// for API compatibility but has no effect in this implementation — the `covr`
+/// atom is a single fixed image independent of playback position.
+///
+/// If `save_path` is provided the bytes are also written to that path
+/// (parent directories are created automatically).
+///
+/// Returns an error if no embedded thumbnail is present or the format is
+/// unsupported.
+Future<Uint8List> extractVideoThumbnail(
+        {required String path, BigInt? timeMs, String? savePath}) =>
+    RustLib.instance.api.crateApiExtractVideoThumbnail(
+        path: path, timeMs: timeMs, savePath: savePath);
+
 /// Read metadata from multiple files in parallel using Rayon.
 /// Each entry is `None` if the file is unsupported or corrupt.
 Future<List<MediaMeta?>> readMetadataBatch({required List<String> paths}) =>

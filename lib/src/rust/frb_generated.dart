@@ -70,7 +70,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 521489591;
+  int get rustContentHash => 219566942;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -82,6 +82,9 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  Future<Uint8List> crateApiExtractVideoThumbnail(
+      {required String path, BigInt? timeMs, String? savePath});
+
   Future<MediaMeta> crateApiReadMetadata({required String path});
 
   Future<List<MediaMeta?>> crateApiReadMetadataBatch(
@@ -97,13 +100,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
+  Future<Uint8List> crateApiExtractVideoThumbnail(
+      {required String path, BigInt? timeMs, String? savePath}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(path, serializer);
+        sse_encode_opt_box_autoadd_u_64(timeMs, serializer);
+        sse_encode_opt_String(savePath, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 1, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_prim_u_8_strict,
+        decodeErrorData: sse_decode_AnyhowException,
+      ),
+      constMeta: kCrateApiExtractVideoThumbnailConstMeta,
+      argValues: [path, timeMs, savePath],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiExtractVideoThumbnailConstMeta =>
+      const TaskConstMeta(
+        debugName: "extract_video_thumbnail",
+        argNames: ["path", "timeMs", "savePath"],
+      );
+
+  @override
   Future<MediaMeta> crateApiReadMetadata({required String path}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(path, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 1, port: port_);
+            funcId: 2, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_media_meta,
@@ -128,7 +159,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_list_String(paths, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 2, port: port_);
+            funcId: 3, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_opt_box_autoadd_media_meta,

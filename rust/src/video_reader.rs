@@ -144,6 +144,44 @@ fn read_ilst_text(meta_children: &[u8], atom_name: &[u8; 4]) -> Option<String> {
     utf8_nonempty(text)
 }
 
+/// Read raw bytes from: <meta-children> > ilst > <atom> > data.
+fn read_ilst_bytes(meta_children: &[u8], atom_name: &[u8; 4]) -> Option<Vec<u8>> {
+    let ilst = find_child_box(meta_children, b"ilst")?;
+    let atom = find_child_box(ilst, atom_name)?;
+    let data = find_child_box(atom, b"data")?;
+    // iTunes data box: 4-byte type indicator + 4-byte locale + payload
+    let bytes = data.get(8..)?;
+    if bytes.is_empty() { None } else { Some(bytes.to_vec()) }
+}
+
+/// Extract the embedded cover-art JPEG/PNG from the `covr` iTunes atom.
+///
+/// Tries two paths (matching the same structure used by `read_itunes_text`):
+///   1. moov > udta > meta > ilst > covr > data  (iTunes/Apple)
+///   2. moov > meta > ilst > covr > data          (no udta wrapper)
+pub fn read_covr_thumbnail(path: &std::path::Path) -> Option<Vec<u8>> {
+    let mut f = std::fs::File::open(path).ok()?;
+    let moov = read_top_level_box(&mut f, b"moov")?;
+
+    // Path 1: moov > udta > meta > ilst > covr > data
+    if let Some(udta) = find_child_box(&moov, b"udta") {
+        if let Some(meta) = find_child_box(udta, b"meta") {
+            if let Some(bytes) = read_ilst_bytes(meta.get(4..).unwrap_or(meta), b"covr") {
+                return Some(bytes);
+            }
+        }
+    }
+
+    // Path 2: moov > meta > ilst > covr > data
+    if let Some(meta) = find_child_box(&moov, b"meta") {
+        if let Some(bytes) = read_ilst_bytes(meta.get(4..).unwrap_or(meta), b"covr") {
+            return Some(bytes);
+        }
+    }
+
+    None
+}
+
 /// Parse a 3GPP text atom payload: uint16 text-length, uint16 language, UTF-8 text.
 fn parse_3gpp_text(data: &[u8]) -> Option<String> {
     if data.len() >= 4 {

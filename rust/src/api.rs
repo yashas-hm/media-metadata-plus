@@ -30,6 +30,44 @@ pub fn read_metadata(path: String) -> anyhow::Result<MediaMeta> {
     }
 }
 
+/// Extract a thumbnail from a video file, returning raw JPEG/PNG bytes.
+///
+/// For MP4 and MOV files, reads the embedded cover-art image from the file's
+/// `covr` iTunes atom without decoding any video frames. `time_ms` is accepted
+/// for API compatibility but has no effect in this implementation — the `covr`
+/// atom is a single fixed image independent of playback position.
+///
+/// If `save_path` is provided the bytes are also written to that path
+/// (parent directories are created automatically).
+///
+/// Returns an error if no embedded thumbnail is present or the format is
+/// unsupported.
+pub fn extract_video_thumbnail(
+    path: String,
+    time_ms: Option<u64>,
+    save_path: Option<String>,
+) -> anyhow::Result<Vec<u8>> {
+    let _ = time_ms; // reserved for Phase 2 FFmpeg seek
+    let path = std::path::Path::new(&path);
+    let mime = crate::mime::detect(path)?;
+
+    let bytes = match mime.as_str() {
+        "video/mp4" | "video/quicktime" => crate::video_reader::read_covr_thumbnail(path)
+            .ok_or_else(|| anyhow::anyhow!("no embedded thumbnail found in {mime} file"))?,
+        _ => anyhow::bail!("thumbnail extraction not supported for {mime}"),
+    };
+
+    if let Some(dest) = save_path {
+        let dest = std::path::Path::new(&dest);
+        if let Some(parent) = dest.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(dest, &bytes)?;
+    }
+
+    Ok(bytes)
+}
+
 /// Read metadata from multiple files in parallel using Rayon.
 /// Each entry is `None` if the file is unsupported or corrupt.
 pub fn read_metadata_batch(paths: Vec<String>) -> Vec<Option<MediaMeta>> {

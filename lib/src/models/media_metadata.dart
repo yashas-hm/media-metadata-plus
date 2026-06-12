@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:media_metadata_plus/src/models/gps_coordinates.dart';
 import 'package:media_metadata_plus/src/rust/api.dart';
 import 'package:media_metadata_plus/src/rust/frb_generated.dart';
@@ -95,6 +97,47 @@ class MediaMetadata {
       return raws.map((raw) => raw == null ? null : _fromRaw(raw)).toList();
     } catch (_) {
       return List.filled(filePaths.length, null);
+    }
+  }
+
+  /// Extracts a thumbnail from a video file, returning raw JPEG bytes.
+  ///
+  /// For MP4 and MOV files, reads the cover-art image embedded in the file's
+  /// `covr` atom — no video decoding required. This fast path works for the
+  /// majority of footage shot on iPhone and modern Android devices.
+  ///
+  /// [timeMs] is the desired position in milliseconds. In this release
+  /// [timeMs] is reserved and has no effect — the `covr` atom is a single
+  /// fixed image independent of playback position. A future FFmpeg-backed
+  /// implementation will seek to this timestamp when no embedded thumbnail
+  /// is present.
+  ///
+  /// If [savePath] is provided the bytes are also written to that path;
+  /// parent directories are created automatically.
+  ///
+  /// Returns `null` if no embedded thumbnail is found or the format is
+  /// unsupported.
+  ///
+  /// ```dart
+  /// final bytes = await MediaMetadata.generateThumbnail('/path/to/video.mp4');
+  /// if (bytes != null) {
+  ///   final image = Image.memory(bytes);
+  /// }
+  /// ```
+  static Future<Uint8List?> generateThumbnail(
+    String path, {
+    int? timeMs,
+    String? savePath,
+  }) async {
+    await _ensureInit();
+    try {
+      return await extractVideoThumbnail(
+        path: path,
+        timeMs: timeMs != null ? BigInt.from(timeMs) : null,
+        savePath: savePath,
+      );
+    } catch (_) {
+      return null;
     }
   }
 
