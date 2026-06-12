@@ -38,7 +38,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Rust targets
-        working-directory: rust
         run: |
           rustup target add x86_64-apple-darwin
           rustup target add aarch64-apple-ios
@@ -96,9 +95,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Rust targets
-        working-directory: rust
         run: |
-          rustup target add x86_64-unknown-linux-gnu
           rustup target add aarch64-linux-android
           rustup target add armv7-linux-androideabi
           rustup target add x86_64-linux-android
@@ -156,28 +153,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust GNU target
-        run: rustup target add x86_64-pc-windows-gnu
-
-      - name: Install MinGW toolchain
-        run: choco install mingw -y
-
       - name: Download prebuilt FFmpeg
         shell: pwsh
         run: |
-          $url = "${{ env.FFMPEG_PREBUILT_BASE }}/x86_64-pc-windows-gnu.zip"
+          $url = "${{ env.FFMPEG_PREBUILT_BASE }}/x86_64-pc-windows-msvc.zip"
           Invoke-WebRequest -Uri $url -OutFile ffmpeg.zip
           Expand-Archive ffmpeg.zip -DestinationPath ffmpeg-prebuilt
 
       - name: Build Windows .dll
         working-directory: rust
         env:
-          FFMPEG_DIR: ${{ github.workspace }}\ffmpeg-prebuilt\x86_64-pc-windows-gnu
-        run: cargo build --release --target x86_64-pc-windows-gnu
+          FFMPEG_DIR: ${{ github.workspace }}\ffmpeg-prebuilt\x86_64-pc-windows-msvc
+        run: cargo build --release --target x86_64-pc-windows-msvc
 
       - name: Stage DLL
         shell: cmd
-        run: copy rust\target\x86_64-pc-windows-gnu\release\media_metadata_plus.dll windows\
+        run: copy rust\target\x86_64-pc-windows-msvc\release\media_metadata_plus.dll windows\
 
       - uses: actions/upload-artifact@v4
         with:

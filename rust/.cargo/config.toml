@@ -1,4 +1,0 @@
-# Statically link the MinGW runtime so the Windows DLL is self-contained
-# and does not require libgcc_s_seh-1.dll / libwinpthread-1.dll at runtime.
-[target.x86_64-pc-windows-gnu]
-rustflags = ["-C", "link-args=-static-libgcc -static-libwinpthread"]
