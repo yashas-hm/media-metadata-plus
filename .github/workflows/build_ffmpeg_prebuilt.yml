@@ -71,6 +71,7 @@ jobs:
           ./configure ${{ env.FF_FLAGS }} \
             --prefix=${{ github.workspace }}/out/aarch64-apple-ios \
             --arch=arm64 --target-os=darwin --cc=clang \
+            --enable-cross-compile \
             --sysroot="$IOS_SDK" \
             --extra-cflags="-arch arm64 -mios-version-min=14.0" \
             --extra-ldflags="-arch arm64 -mios-version-min=14.0" \
@@ -84,6 +85,7 @@ jobs:
           ./configure ${{ env.FF_FLAGS }} \
             --prefix=${{ github.workspace }}/out/aarch64-apple-ios-sim \
             --arch=arm64 --target-os=darwin --cc=clang \
+            --enable-cross-compile \
             --sysroot="$SIM_SDK" \
             --extra-cflags="-arch arm64 -target aarch64-apple-ios14.0-simulator" \
             --extra-ldflags="-arch arm64 -target aarch64-apple-ios14.0-simulator" \
@@ -97,6 +99,7 @@ jobs:
           ./configure ${{ env.FF_FLAGS }} \
             --prefix=${{ github.workspace }}/out/x86_64-apple-ios \
             --arch=x86_64 --target-os=darwin --cc=clang \
+            --enable-cross-compile \
             --sysroot="$SIM_SDK" \
             --extra-cflags="-arch x86_64 -target x86_64-apple-ios14.0-simulator" \
             --extra-ldflags="-arch x86_64 -target x86_64-apple-ios14.0-simulator"
@@ -249,7 +252,7 @@ jobs:
           cd ffmpeg-src
           ./configure ${{ env.FF_FLAGS }} \
             --prefix="$OUT" \
-            --arch=x86_64 --target-os=mingw32 --toolchain=gcc
+            --arch=x86_64 --target-os=mingw32
           make -j$(nproc) install
 
       - name: Zip artifacts
