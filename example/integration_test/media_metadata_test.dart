@@ -135,10 +135,13 @@ void main() {
       expect(bytes[1], 0xD8);
     });
 
-    testWidgets('returns null when no covr atom is present', (_) async {
+    testWidgets('falls back to FFmpeg frame when no covr atom', (_) async {
       final bytes =
           await MediaMetadata.generateThumbnail(_fixture('video.mp4'));
-      expect(bytes, isNull);
+      expect(bytes, isNotNull);
+      // JPEG magic bytes: FF D8
+      expect(bytes![0], 0xFF);
+      expect(bytes[1], 0xD8);
     });
 
     testWidgets('returns null for image files', (_) async {

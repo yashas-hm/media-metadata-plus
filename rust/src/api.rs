@@ -47,13 +47,19 @@ pub fn extract_video_thumbnail(
     time_ms: Option<u64>,
     save_path: Option<String>,
 ) -> anyhow::Result<Vec<u8>> {
-    let _ = time_ms; // reserved for Phase 2 FFmpeg seek
     let path = std::path::Path::new(&path);
     let mime = crate::mime::detect(path)?;
 
     let bytes = match mime.as_str() {
-        "video/mp4" | "video/quicktime" => crate::video_reader::read_covr_thumbnail(path)
-            .ok_or_else(|| anyhow::anyhow!("no embedded thumbnail found in {mime} file"))?,
+        "video/mp4" | "video/quicktime" => {
+            // Fast path: embedded cover-art atom (no decode required)
+            if let Some(b) = crate::video_reader::read_covr_thumbnail(path) {
+                b
+            } else {
+                // Fallback: seek-and-decode via FFmpeg
+                crate::thumbnail_reader::extract(path, time_ms, 640)?
+            }
+        }
         _ => anyhow::bail!("thumbnail extraction not supported for {mime}"),
     };
 
