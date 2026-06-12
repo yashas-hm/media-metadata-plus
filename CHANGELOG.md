@@ -1,3 +1,12 @@
+## 1.4.0
+
+* Added `MediaMetadata.generateThumbnail(path, {int? timeMs, String? savePath})` — extracts a JPEG thumbnail from MP4 and MOV files.
+  * **Fast path:** reads the embedded cover-art image from the `covr` iTunes atom — no video decoding, zero overhead. Covers most iPhone and iPad footage.
+  * **FFmpeg fallback:** when no embedded thumbnail is present, seeks to 10 % of the video duration (or a caller-supplied `timeMs`) and decodes one frame via FFmpeg. Supports H.264, HEVC, VP9, AV1, and MPEG-4 — covers Android devices, DSLRs, GoPro, DJI, and any video without an embedded thumbnail.
+* Thumbnail output is scaled to a maximum width of 640 px, preserving aspect ratio.
+* Optional `savePath` — if provided, the JPEG bytes are written to that path (parent directories are created automatically).
+* Returns `null` if the file is unsupported or no frame can be extracted — no exception to handle.
+
 ## 1.3.0
 
 * Added `modifiedAt` field (`DateTime?`) — last-modified timestamp in UTC. Source is the EXIF `DateTime` tag for images and `mvhd.modification_time` for MP4/MOV.

@@ -2,8 +2,8 @@
 <img src="https://raw.githubusercontent.com/yashas-hm/media-metadata-plus/refs/heads/main/image_asset.png" width="80%">
 </div>
 
-A cross-platform Flutter plugin for reading media metadata from images, RAW files, and videos. Powered by Rust via
-`flutter_rust_bridge` v2.
+A cross-platform Flutter plugin for reading media metadata from images, RAW files, and videos, and extracting video
+thumbnails. Powered by Rust via `flutter_rust_bridge` v2.
 
 ## Supported formats
 
@@ -60,6 +60,49 @@ void main() async {
 `MediaMetadata.read()` returns `null` for unsupported formats or corrupt files — no exceptions to handle.
 
 No initialisation call required. The Rust library is loaded automatically on first use.
+
+## Video thumbnails
+
+```dart
+// Extract a JPEG thumbnail from a video file
+final bytes = await MediaMetadata.generateThumbnail('/path/to/video.mp4');
+if (bytes != null) {
+  final image = Image.memory(bytes);
+}
+
+// Seek to a specific position (milliseconds)
+final bytes = await MediaMetadata.generateThumbnail(
+  '/path/to/video.mp4',
+  timeMs: 5000,
+);
+
+// Write to disk at the same time
+final bytes = await MediaMetadata.generateThumbnail(
+  '/path/to/video.mp4',
+  savePath: '/tmp/thumb.jpg',
+);
+```
+
+`generateThumbnail` uses a two-stage approach:
+
+1. **Fast path** — reads the embedded cover-art image from the file's `covr` iTunes atom. No video decoding, covers most iPhone and iPad footage.
+2. **FFmpeg fallback** — when no embedded thumbnail is present, decodes one frame at 10 % of the video duration (or `timeMs`). Supports H.264, HEVC, VP9, AV1, and MPEG-4 — covers Android, DSLRs, GoPro, DJI, and any other source.
+
+Output is scaled to a maximum width of 640 px preserving aspect ratio. Returns `null` if no thumbnail can be extracted.
+
+## API
+
+### `MediaMetadata.read(path)`
+
+Reads metadata from a single file. Returns `null` for unsupported formats or corrupt files.
+
+### `MediaMetadata.readAll(paths)`
+
+Reads metadata from multiple files in parallel (Rayon on the Rust side). Returns a `List<MediaMetadata?>` in input order.
+
+### `MediaMetadata.generateThumbnail(path, {int? timeMs, String? savePath})`
+
+Extracts a JPEG thumbnail from a video file. Returns `null` if no thumbnail can be extracted.
 
 ## Models
 
