@@ -8,9 +8,10 @@ cd "$REPO/rust"
 cargo_build() {
   local target="$1"
   if [[ -n "${FFMPEG_PREBUILT_DIR:-}" ]]; then
-    FFMPEG_DIR="${FFMPEG_PREBUILT_DIR}/${target}" cargo build --release --target "$target"
+    IPHONEOS_DEPLOYMENT_TARGET=14.0 \
+      FFMPEG_DIR="${FFMPEG_PREBUILT_DIR}/${target}" cargo build --release --target "$target"
   else
-    cargo build --release --target "$target"
+    IPHONEOS_DEPLOYMENT_TARGET=14.0 cargo build --release --target "$target"
   fi
 }
 
