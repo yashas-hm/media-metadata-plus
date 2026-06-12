@@ -16,8 +16,8 @@ let package = Package(
         ),
         .binaryTarget(
             name: "MediaMetadataPlusRust",
-            url: "https://github.com/yashas-hm/media-metadata-plus/releases/download/1.4.0/ios_1.4.0.xcframework.zip",
-            checksum: "10cf0ab8d49ca4438414e277c17b9fc08c20dd15d64e687b7cbbc2e8547fc483" // ios
+            url: "https://github.com/yashas-hm/media-metadata-plus/releases/download/v1.4.0/ios_v1.4.0.xcframework.zip",
+            checksum: "022d15a1f66bcfb307f11d35c36c5f8042bb7889e5b0db8f16af75747127339b" // ios
         )
     ]
 )
