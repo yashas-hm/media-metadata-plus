@@ -1,0 +1,5 @@
+# bcrypt: av_get_random_seed() in libavutil uses BCryptGenRandom.
+# user32: hwcontext_dxva2 in libavutil pulls in GetDesktopWindow.
+# Both are Windows system libs not auto-linked by the MSVC linker.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-l", "bcrypt", "-l", "user32"]
