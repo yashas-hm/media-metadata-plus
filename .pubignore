@@ -26,6 +26,11 @@ macos/Pods/
 ios/.symlinks/
 macos/.symlinks/
 
+# xcframeworks are downloaded by CocoaPods (prepare_command) and SPM (remote binary target).
+# Too large (~50 MB uncompressed) to include in the pub.dev tarball.
+ios/Frameworks/
+macos/Frameworks/
+
 # Linux / Windows build artifacts
 linux/build/
 windows/build/

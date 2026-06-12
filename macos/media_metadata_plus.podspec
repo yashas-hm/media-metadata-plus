@@ -19,5 +19,15 @@ Pod::Spec.new do |s|
   s.dependency           'FlutterMacOS'
   s.vendored_frameworks  = 'Frameworks/media_metadata_plus.xcframework'
 
+  # The xcframework is too large to ship in the pub.dev tarball.
+  # Download it from the GitHub release at pod install time.
+  s.prepare_command = <<-CMD
+    mkdir -p Frameworks
+    curl -fsSL "https://github.com/yashas-hm/media-metadata-plus/releases/download/v#{s.version}/macos_v#{s.version}.xcframework.zip" \
+      -o /tmp/mmp_macos.xcframework.zip
+    unzip -o /tmp/mmp_macos.xcframework.zip -d Frameworks
+    rm /tmp/mmp_macos.xcframework.zip
+  CMD
+
   s.resource_bundles = {'media_metadata_plus_privacy' => ['Resources/PrivacyInfo.xcprivacy']}
 end
