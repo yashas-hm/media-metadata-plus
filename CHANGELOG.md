@@ -1,4 +1,4 @@
-## 1.4.1
+## 1.4.2
 
 * Fixed video thumbnails being rotated/tilted — FFmpeg frame extraction now reads the `rotate` metadata from the video stream and applies the correct pixel rotation before encoding. Affects portrait videos from iPhone, Android, and other cameras that store rotation in the track header matrix.
 
