@@ -23,7 +23,6 @@ on:
 
 env:
   VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
-  FFMPEG_PREBUILT_BASE: https://github.com/yashas-hm/media-metadata-plus/releases/download/ffmpeg-prebuilt-${{ github.event_name == 'workflow_dispatch' && inputs.ffmpeg_prebuilt_tag || 'n7.1.1' }}
 
 permissions:
   contents: write   # create GitHub Release + push Package.swift commit
@@ -36,6 +35,12 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve FFmpeg tag
+        run: |
+          TAG="${{ inputs.ffmpeg_prebuilt_tag }}"
+          [[ -z "$TAG" ]] && TAG="$(cat scripts/ci/ffmpeg_prebuilt_tag)"
+          echo "FFMPEG_PREBUILT_BASE=https://github.com/yashas-hm/media-metadata-plus/releases/download/ffmpeg-prebuilt-${TAG}" >> $GITHUB_ENV
 
       - name: Install Rust targets
         working-directory: rust
@@ -94,6 +99,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve FFmpeg tag
+        run: |
+          TAG="${{ inputs.ffmpeg_prebuilt_tag }}"
+          [[ -z "$TAG" ]] && TAG="$(cat scripts/ci/ffmpeg_prebuilt_tag)"
+          echo "FFMPEG_PREBUILT_BASE=https://github.com/yashas-hm/media-metadata-plus/releases/download/ffmpeg-prebuilt-${TAG}" >> $GITHUB_ENV
 
       - name: Install Rust targets
         working-directory: rust
@@ -154,6 +165,13 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve FFmpeg tag
+        shell: bash
+        run: |
+          TAG="${{ inputs.ffmpeg_prebuilt_tag }}"
+          [[ -z "$TAG" ]] && TAG="$(cat scripts/ci/ffmpeg_prebuilt_tag)"
+          echo "FFMPEG_PREBUILT_BASE=https://github.com/yashas-hm/media-metadata-plus/releases/download/ffmpeg-prebuilt-${TAG}" >> $GITHUB_ENV
 
       - name: Download prebuilt FFmpeg
         shell: pwsh

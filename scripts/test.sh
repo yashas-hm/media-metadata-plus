@@ -12,8 +12,6 @@
 
 set -euo pipefail
 
-export PATH="$HOME/.cargo/bin:$PATH"
-
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MODE="all"
 DEVICE="macos"
@@ -44,12 +42,32 @@ if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
     SANDBOX_DIR="$HOME/Library/Containers/$BUNDLE_ID/Data/rust/target/release"
     DYLIB_SRC="$REPO_ROOT/rust/target/release/$DYLIB_NAME"
 
+    # ── FFmpeg pre-built cache ──────────────────────────────────────────────
+    # ffmpeg-sys-next v7 requires FFmpeg 7.x headers+libs. Homebrew ships 8+.
+    FFMPEG_TAG="$(cat "$REPO_ROOT/scripts/ci/ffmpeg_prebuilt_tag")"
+    FFMPEG_TARGET="aarch64-apple-darwin"
+    FFMPEG_CACHE="$HOME/.cache/media-metadata-plus/ffmpeg-prebuilt"
+    FFMPEG_DIR_LOCAL="$FFMPEG_CACHE/$FFMPEG_TARGET"
+    RELEASE_BASE="https://github.com/yashas-hm/media-metadata-plus/releases/download/ffmpeg-prebuilt-${FFMPEG_TAG}"
+
+    if [[ ! -d "$FFMPEG_DIR_LOCAL/include" ]]; then
+      echo "→ Downloading pre-built FFmpeg $FFMPEG_TAG ($FFMPEG_TARGET)..."
+      mkdir -p "$FFMPEG_CACHE"
+      curl -fsSL "$RELEASE_BASE/$FFMPEG_TARGET.zip" -o "$FFMPEG_CACHE/$FFMPEG_TARGET.zip"
+      unzip -q "$FFMPEG_CACHE/$FFMPEG_TARGET.zip" -d "$FFMPEG_CACHE"
+      rm "$FFMPEG_CACHE/$FFMPEG_TARGET.zip"
+    fi
+    export FFMPEG_DIR="$FFMPEG_DIR_LOCAL"
+    # ───────────────────────────────────────────────────────────────────────
+
     echo "→ Building Rust library (release)..."
     cargo build --release --manifest-path "$REPO_ROOT/rust/Cargo.toml"
 
     echo "→ Staging dylib for FRB debug loader..."
     mkdir -p "$SANDBOX_DIR"
     cp "$DYLIB_SRC" "$SANDBOX_DIR/$DYLIB_NAME"
+
+    rm -rf "$FFMPEG_CACHE"
   fi
 
   echo "→ Running integration tests on '$DEVICE'..."
