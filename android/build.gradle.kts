@@ -1,5 +1,5 @@
 group = "dev.yashashm.media_metadata_plus"
-version = "1.4.1"
+version = "1.4.2"
 
 buildscript {
     val kotlinVersion = "2.2.20"
