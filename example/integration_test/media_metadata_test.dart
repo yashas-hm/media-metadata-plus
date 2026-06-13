@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -9,6 +10,25 @@ import 'package:media_metadata_plus/media_metadata_plus.dart';
 // `flutter test integration_test/ -d macos`.
 String _fixture(String name) =>
     '${Directory.current.path}/integration_test/media/$name';
+
+/// Scan JPEG bytes for the first SOF marker and return (width, height).
+(int, int)? _jpegDimensions(Uint8List bytes) {
+  int i = 0;
+  while (i + 1 < bytes.length) {
+    if (bytes[i] != 0xFF) return null;
+    final marker = bytes[i + 1];
+    if (marker == 0xC0 || marker == 0xC1 || marker == 0xC2) {
+      if (i + 8 >= bytes.length) return null;
+      final h = (bytes[i + 5] << 8) | bytes[i + 6];
+      final w = (bytes[i + 7] << 8) | bytes[i + 8];
+      return (w, h);
+    }
+    if (i + 3 >= bytes.length) break;
+    final segLen = (bytes[i + 2] << 8) | bytes[i + 3];
+    i += 2 + segLen;
+  }
+  return null;
+}
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -123,6 +143,31 @@ void main() {
   testWidgets('returns null for corrupt file', (_) async {
     final meta = await MediaMetadata.read(_fixture('corrupt.jpg'));
     expect(meta, isNull);
+  });
+
+  group('thumbnail rotation', () {
+    testWidgets('90° rotated video produces portrait thumbnail', (_) async {
+      final bytes = await MediaMetadata.generateThumbnail(
+        _fixture('video_rotate90.mp4'),
+      );
+      expect(bytes, isNotNull);
+      final dims = _jpegDimensions(bytes!);
+      expect(dims, isNotNull, reason: 'output must be a valid JPEG');
+      // Stored as 480×270; display rotation 90° CW → portrait 270×480
+      expect(dims!.$1, 270, reason: 'width should be 270 after 90° rotation');
+      expect(dims.$2, 480, reason: 'height should be 480 after 90° rotation');
+    });
+
+    testWidgets('unrotated video preserves landscape dimensions', (_) async {
+      final bytes = await MediaMetadata.generateThumbnail(
+        _fixture('video.mp4'),
+      );
+      expect(bytes, isNotNull);
+      final dims = _jpegDimensions(bytes!);
+      expect(dims, isNotNull);
+      expect(dims!.$1, 480, reason: 'width should be 480');
+      expect(dims.$2, 270, reason: 'height should be 270');
+    });
   });
 
   group('generateThumbnail', () {

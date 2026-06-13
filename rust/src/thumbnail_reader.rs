@@ -37,13 +37,7 @@ pub fn extract(
             .decoder()
             .video()?;
 
-        // MOV/MP4 demuxer populates "rotate" in stream metadata from the tkhd matrix.
-        // Negative values (e.g. -90) are equivalent to 270°; rem_euclid normalises them.
-        let rot: i32 = stream
-            .metadata()
-            .get("rotate")
-            .and_then(|v| v.parse().ok())
-            .unwrap_or(0);
+        let rot = stream_rotation(&stream);
 
         (idx, tgt, dec, rot)
     };
@@ -102,6 +96,46 @@ pub fn extract(
     }
 
     Err(anyhow::anyhow!("no video frame decoded"))
+}
+
+/// Read the display rotation angle (degrees CW) from a video stream.
+///
+/// FFmpeg < 6 stored rotation as a `rotate` key in `AVStream::metadata`.
+/// FFmpeg 7+ stores it only as an `AV_PKT_DATA_DISPLAYMATRIX` entry in
+/// `AVStream::codecpar::coded_side_data`. We try both.
+fn stream_rotation(stream: &ffmpeg::format::stream::Stream<'_>) -> i32 {
+    // Older files / older FFmpeg builds
+    if let Some(r) = stream
+        .metadata()
+        .get("rotate")
+        .and_then(|v| v.parse::<i32>().ok())
+    {
+        return r;
+    }
+    // FFmpeg 7+: rotation lives in the display matrix on the codec parameters
+    use ffmpeg_next::ffi::{av_display_rotation_get, AVPacketSideDataType};
+    unsafe {
+        let par = (*stream.as_ptr()).codecpar;
+        if par.is_null() {
+            return 0;
+        }
+        let nb = (*par).nb_coded_side_data as usize;
+        let sd = (*par).coded_side_data;
+        if sd.is_null() {
+            return 0;
+        }
+        for i in 0..nb {
+            let entry = &*sd.add(i);
+            if entry.type_ == AVPacketSideDataType::AV_PKT_DATA_DISPLAYMATRIX {
+                let angle = av_display_rotation_get(entry.data as *const i32);
+                if !angle.is_nan() {
+                    // av_display_rotation_get returns CCW degrees; negate for CW
+                    return ((-angle).rem_euclid(360.0).round()) as i32;
+                }
+            }
+        }
+        0
+    }
 }
 
 /// Rotate pixel data and return (rotated_pixels, new_width, new_height).
