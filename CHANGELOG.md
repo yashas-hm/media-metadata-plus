@@ -1,3 +1,7 @@
+## 1.4.1
+
+* Fixed video thumbnails being rotated/tilted — FFmpeg frame extraction now reads the `rotate` metadata from the video stream and applies the correct pixel rotation before encoding. Affects portrait videos from iPhone, Android, and other cameras that store rotation in the track header matrix.
+
 ## 1.4.0
 
 * Added `MediaMetadata.generateThumbnail(path, {int? timeMs, String? savePath})` — extracts a JPEG thumbnail from MP4 and MOV files.

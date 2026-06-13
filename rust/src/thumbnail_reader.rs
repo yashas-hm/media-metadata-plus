@@ -18,7 +18,7 @@ pub fn extract(
 
     // Extract stream info and build the decoder in a scoped block so the
     // immutable borrow on `ictx` is released before the mutable seek call.
-    let (stream_idx, target_ms, mut decoder) = {
+    let (stream_idx, target_ms, mut decoder, rotation) = {
         let stream = ictx
             .streams()
             .best(ffmpeg::media::Type::Video)
@@ -36,7 +36,16 @@ pub fn extract(
         let dec = ffmpeg::codec::context::Context::from_parameters(stream.parameters())?
             .decoder()
             .video()?;
-        (idx, tgt, dec)
+
+        // MOV/MP4 demuxer populates "rotate" in stream metadata from the tkhd matrix.
+        // Negative values (e.g. -90) are equivalent to 270°; rem_euclid normalises them.
+        let rot: i32 = stream
+            .metadata()
+            .get("rotate")
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(0);
+
+        (idx, tgt, dec, rot)
     };
 
     // Pre-input seek is 10–100x faster than post-input seek for long videos
@@ -79,11 +88,13 @@ pub fn extract(
                 })
                 .collect();
 
+            let (pixels, enc_w, enc_h) = apply_rotation(pixels, out_w, out_h, rotation);
+
             let mut buf = Vec::new();
             jpeg_encoder::Encoder::new(&mut buf, 85).encode(
                 &pixels,
-                out_w as u16,
-                out_h as u16,
+                enc_w as u16,
+                enc_h as u16,
                 jpeg_encoder::ColorType::Rgb,
             )?;
             return Ok(buf);
@@ -91,6 +102,57 @@ pub fn extract(
     }
 
     Err(anyhow::anyhow!("no video frame decoded"))
+}
+
+/// Rotate pixel data and return (rotated_pixels, new_width, new_height).
+/// For 90°/270° the width and height are swapped in the output.
+fn apply_rotation(pixels: Vec<u8>, w: u32, h: u32, rotation: i32) -> (Vec<u8>, u32, u32) {
+    match rotation.rem_euclid(360) {
+        90 => (rotate_90cw(&pixels, w as usize, h as usize), h, w),
+        180 => (rotate_180(pixels), w, h),
+        270 => (rotate_270cw(&pixels, w as usize, h as usize), h, w),
+        _ => (pixels, w, h),
+    }
+}
+
+/// 90° clockwise: output dimensions are h × w.
+/// Input  (row, col) → output (col, h-1-row).
+fn rotate_90cw(pixels: &[u8], w: usize, h: usize) -> Vec<u8> {
+    let mut out = vec![0u8; pixels.len()];
+    for row in 0..h {
+        for col in 0..w {
+            let src = (row * w + col) * 3;
+            let dst = (col * h + (h - 1 - row)) * 3;
+            out[dst..dst + 3].copy_from_slice(&pixels[src..src + 3]);
+        }
+    }
+    out
+}
+
+/// 180°: reverse every pixel in place.
+fn rotate_180(mut pixels: Vec<u8>) -> Vec<u8> {
+    let n = pixels.len() / 3;
+    for i in 0..n / 2 {
+        let (a, b) = (i * 3, (n - 1 - i) * 3);
+        pixels.swap(a, b);
+        pixels.swap(a + 1, b + 1);
+        pixels.swap(a + 2, b + 2);
+    }
+    pixels
+}
+
+/// 270° clockwise (= 90° counter-clockwise): output dimensions are h × w.
+/// Input  (row, col) → output (w-1-col, row).
+fn rotate_270cw(pixels: &[u8], w: usize, h: usize) -> Vec<u8> {
+    let mut out = vec![0u8; pixels.len()];
+    for row in 0..h {
+        for col in 0..w {
+            let src = (row * w + col) * 3;
+            let dst = ((w - 1 - col) * h + row) * 3;
+            out[dst..dst + 3].copy_from_slice(&pixels[src..src + 3]);
+        }
+    }
+    out
 }
 
 fn scale_dims(src_w: u32, src_h: u32, max_w: u32) -> (u32, u32) {
