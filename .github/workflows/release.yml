@@ -34,7 +34,7 @@ jobs:
   build-apple:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Resolve FFmpeg tag
         run: |
@@ -81,7 +81,7 @@ jobs:
           cd ../../ios/Frameworks
           zip -r -y "../../ios_${{ env.VERSION }}.xcframework.zip" media_metadata_plus.xcframework
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: apple
           path: |
@@ -98,7 +98,7 @@ jobs:
   build-linux-android:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Resolve FFmpeg tag
         run: |
@@ -117,7 +117,7 @@ jobs:
       - name: Install cargo-ndk
         run: cargo install cargo-ndk
 
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
       - name: Install NDK
         run: sdkmanager "ndk;27.0.12077973"
 
@@ -149,7 +149,7 @@ jobs:
           FFMPEG_PREBUILT_DIR: ${{ github.workspace }}/ffmpeg-prebuilt
         run: bash scripts/ci/build_android.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: linux-android
           path: |
@@ -164,7 +164,7 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Resolve FFmpeg tag
         shell: bash
@@ -190,7 +190,7 @@ jobs:
         shell: cmd
         run: copy rust\target\x86_64-pc-windows-msvc\release\media_metadata_plus.dll windows\
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: windows
           path: windows/media_metadata_plus.dll
@@ -209,18 +209,18 @@ jobs:
       contents: write   # create release + push Package.swift commit
       id-token: write   # pub.dev OIDC
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { name: apple,         path: . }
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { name: linux-android, path: . }
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { name: windows,       path: windows/ }
 
       - name: Ensure tag exists
@@ -236,7 +236,7 @@ jobs:
 
       # Upload xcframeworks to GitHub Release (SPM binaryTarget URLs)
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.VERSION }}
           name: ${{ env.VERSION }}
@@ -285,7 +285,7 @@ jobs:
       - uses: subosito/flutter-action@v2     # install Flutter (and its bundled Dart) first
         with:
           channel: stable
-      - uses: dart-lang/setup-dart@v1.7.2   # OIDC token exchange runs last so credentials aren't overwritten
+      - uses: dart-lang/setup-dart@v1.8.0   # OIDC token exchange runs last so credentials aren't overwritten
 
       - name: Validate package (dry run)
         run: flutter pub publish --dry-run

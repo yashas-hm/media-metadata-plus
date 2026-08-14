@@ -33,7 +33,7 @@ jobs:
     name: Build Apple (macOS + iOS)
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Resolve FFmpeg tag
         run: |
@@ -118,7 +118,7 @@ jobs:
             zip -r "${{ github.workspace }}/${target%/}.zip" "$target"
           done
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ffmpeg-apple
           path: '*.zip'
@@ -128,7 +128,7 @@ jobs:
     name: Build Linux + Android
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Resolve FFmpeg tag
         run: |
@@ -140,7 +140,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y nasm zip
 
       - name: Setup Android NDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           packages: 'ndk;27.0.12077973'
 
@@ -223,7 +223,7 @@ jobs:
             zip -r "${{ github.workspace }}/${target%/}.zip" "$target"
           done
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ffmpeg-linux-android
           path: '*.zip'
@@ -236,7 +236,7 @@ jobs:
     name: Build Windows
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Resolve FFmpeg tag
         shell: bash
@@ -282,7 +282,7 @@ jobs:
           cd "$(cygpath '${{ github.workspace }}')/out"
           zip -r "${{ github.workspace }}/x86_64-pc-windows-msvc.zip" x86_64-pc-windows-msvc
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ffmpeg-windows
           path: '*.zip'
@@ -295,7 +295,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -306,13 +306,13 @@ jobs:
           [[ -z "$TAG" ]] && TAG="$(cat scripts/ci/ffmpeg_prebuilt_tag)"
           echo "FFMPEG_TAG=$TAG" >> $GITHUB_ENV
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           merge-multiple: true
           path: artifacts
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ffmpeg-prebuilt-${{ env.FFMPEG_TAG }}
           name: FFmpeg Prebuilt ${{ env.FFMPEG_TAG }}
