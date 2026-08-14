@@ -45,6 +45,10 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
+      - name: Add Linux Desktop Support to Example
+        working-directory: example
+        run: flutter create --platforms=linux .
+
       - name: Run Integration Tests
         working-directory: example
         run: xvfb-run -a flutter test integration_test/ -d linux
