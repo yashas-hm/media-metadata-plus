@@ -1,0 +1,54 @@
+name: Integration Test
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Flutter Setup
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install Linux Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev xvfb
+
+      - name: Resolve FFmpeg tag
+        run: |
+          TAG="$(cat scripts/ci/ffmpeg_prebuilt_tag)"
+          echo "FFMPEG_PREBUILT_BASE=https://github.com/yashas-hm/media-metadata-plus/releases/download/ffmpeg-prebuilt-${TAG}" >> $GITHUB_ENV
+
+      - name: Download prebuilt FFmpeg
+        run: |
+          mkdir -p ffmpeg-prebuilt
+          curl -fsSL "${{ env.FFMPEG_PREBUILT_BASE }}/x86_64-unknown-linux-gnu.zip" -o ffmpeg.zip
+          unzip -q ffmpeg.zip -d ffmpeg-prebuilt
+          rm ffmpeg.zip
+
+      - name: Build Linux .so
+        env:
+          FFMPEG_DIR: ${{ github.workspace }}/ffmpeg-prebuilt/x86_64-unknown-linux-gnu
+        working-directory: rust
+        run: cargo build --release --target x86_64-unknown-linux-gnu
+
+      - name: Stage Linux .so
+        run: cp rust/target/x86_64-unknown-linux-gnu/release/libmedia_metadata_plus.so linux/
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Run Integration Tests
+        working-directory: example
+        run: xvfb-run -a flutter test integration_test/ -d linux
+
+      - name: Cleanup Rust target dir
+        if: always()
+        run: rm -rf rust/target

@@ -31,7 +31,7 @@ class _HomePageState extends State<HomePage> {
   bool _loading = false;
 
   Future<void> _pick() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.media);
+    final result = await FilePicker.pickFiles(type: FileType.media);
     if (result == null) return;
 
     setState(() => _loading = true);

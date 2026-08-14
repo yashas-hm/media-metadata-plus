@@ -23,3 +23,7 @@ jobs:
 
       - name: Analyze
         run: dart analyze
+
+      - name: Analyze Example
+        working-directory: example
+        run: flutter analyze
