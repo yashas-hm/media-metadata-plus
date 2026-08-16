@@ -1,7 +1,8 @@
 name: Release
 
 # Two ways in:
-#   1. A PR titled "[vX.Y.Z]" merging into main.
+#   1. A PR containing "[vX.Y.Z]" in its title (e.g. "chore: [v1.5.0]") merging
+#      into main — see pr_title_check.yml for the required title prefix.
 #   2. Manual workflow_dispatch with a version input.
 # Both funnel through versioning first, which bumps every version-bearing
 # file, commits, and tags — only then do the platform builds and publish run.
