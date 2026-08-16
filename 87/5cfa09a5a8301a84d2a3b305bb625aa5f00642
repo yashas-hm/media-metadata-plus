@@ -1,0 +1,14 @@
+CLAUDE.md
+  h_489c0496f9f57d 7-13,24-32,34-35,37-41,43,57-58,65-66,70-87,89-107,112,115-118,120-121,144-150
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "875cfa09a5a8301a84d2a3b305bb625aa5f00642",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
