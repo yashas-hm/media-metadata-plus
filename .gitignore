@@ -73,6 +73,3 @@ windows/build/
 !windows/flutter_media_metadata_plugin.h
 !windows/flutter_media_metadata_plugin_c_api.cpp
 !windows/include/
-
-# AI planning docs — not for pub.dev consumers
-/docs/AI/
