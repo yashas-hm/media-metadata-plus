@@ -2,6 +2,15 @@ name: Flutter Analyze & Format Check
 
 on:
   pull_request:
+    paths:
+      - 'lib/**'
+      - 'lib/src/rust/**'
+      - 'test/**'
+      - 'example/**'
+      - 'pubspec.yaml'
+      - 'analysis_options.yaml'
+      - 'flutter_rust_bridge.yaml'
+      - '.github/workflows/flutter_check.yml'
 
 jobs:
   validate:
