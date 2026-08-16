@@ -1,0 +1,16 @@
+.github/workflows/pr_title_check.yml
+  h_489c0496f9f57d 5,15-17,21
+.github/workflows/release.yml
+  h_489c0496f9f57d 4-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "2dedf583fb5bae5e20b7e182040008246bbb5501",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
