@@ -1,0 +1,19 @@
+README.md
+  h_489c0496f9f57d 2
+.github/workflows/release.yml
+  h_489c0496f9f57d 98,112,299,304,357,359
+  h_489c0496f9f57d 123,189,257,298,300,358,360-369,413-417
+.pubignore
+  h_489c0496f9f57d 60-62,65-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "73988b4fc94f530ebc0e04285adca823fcc48fc7",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
