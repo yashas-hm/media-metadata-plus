@@ -394,6 +394,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -405,6 +406,14 @@ jobs:
         run: |
           VERSION="${{ needs.versioning.outputs.version }}"
           gh release delete "$VERSION" --yes || echo "No release to delete for $VERSION."
+
+      - name: Close sync-main PR, if one was opened
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="bot/release-${{ needs.versioning.outputs.version }}"
+          gh pr close "$BRANCH" --delete-branch=false --comment "Closing: release run failed, rolling back this release." \
+            || echo "No open PR for $BRANCH."
 
       - name: Delete tag
         run: |
