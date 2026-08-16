@@ -44,7 +44,7 @@ if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
     # (see rust/Cargo.toml) — Homebrew's FFmpeg is usually newer.
     FFMPEG_TAG="$(cat "$REPO_ROOT/scripts/ci/ffmpeg_prebuilt_tag")"
     FFMPEG_TARGET="aarch64-apple-darwin"
-    FFMPEG_CACHE="$HOME/.cache/media-metadata-plus/ffmpeg-prebuilt-${FFMPEG_TAG}"
+    FFMPEG_CACHE="$REPO_ROOT/.cache/ffmpeg-${FFMPEG_TAG}"
     FFMPEG_DIR_LOCAL="$FFMPEG_CACHE/$FFMPEG_TARGET"
     RELEASE_BASE="https://github.com/yashas-hm/media-metadata-plus/releases/download/ffmpeg-prebuilt-${FFMPEG_TAG}"
 

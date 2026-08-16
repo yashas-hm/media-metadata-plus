@@ -15,8 +15,8 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # (see rust/Cargo.toml) — Homebrew's are usually newer. Download the same
 # pre-built used by CI.
 FFMPEG_TAG="$(cat "$REPO_ROOT/scripts/ci/ffmpeg_prebuilt_tag")"
-FFMPEG_TARGET="aarch64-apple-darwin"
-FFMPEG_CACHE=".cache/ffmpeg-prebuilt-${FFMPEG_TAG}"
+FFMPEG_TARGET="$(rustc -vV | sed -n 's/^host: //p')"
+FFMPEG_CACHE="$REPO_ROOT/.cache/ffmpeg-${FFMPEG_TAG}"
 FFMPEG_DIR_LOCAL="$FFMPEG_CACHE/$FFMPEG_TARGET"
 RELEASE_BASE="https://github.com/yashas-hm/media-metadata-plus/releases/download/ffmpeg-prebuilt-${FFMPEG_TAG}"
 
@@ -45,6 +45,3 @@ flutter pub get
 
 echo ""
 echo "✓ Done. Dart bindings are at lib/src/rust/frb_generated.dart"
-
-# Clean up the downloaded FFmpeg — only headers were needed for codegen
-rm -rf "$FFMPEG_CACHE"
