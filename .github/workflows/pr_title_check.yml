@@ -1,0 +1,26 @@
+name: PR Title Check
+
+on:
+  pull_request:
+    types: [opened, edited, reopened]
+
+jobs:
+  check-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # Release PRs (see release.yml) use "[vX.Y.Z]", not a conventional prefix.
+          if echo "$TITLE" | grep -qE '^\[v[0-9]+\.[0-9]+\.[0-9]+\]'; then
+            echo "Release PR title — OK: $TITLE"
+            exit 0
+          fi
+
+          if echo "$TITLE" | grep -qE '^(fix|feat|update|refactor|chore|build\(deps\)|build\(deps-dev\)):'; then
+            echo "PR title OK: $TITLE"
+          else
+            echo "::error::PR title must start with one of: fix:, feat:, update:, refactor:, chore:, build(deps):, build(deps-dev): — or be a release PR titled [vX.Y.Z]. Got: '$TITLE'"
+            exit 1
+          fi
