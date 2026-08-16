@@ -100,11 +100,16 @@ when that env var is unset. See [`docs/decisions.md`](docs/decisions.md) for the
 ### Testing layout
 
 - `test/` — pure-Dart unit tests, no native library, run anywhere
-- `example/test/` — exercises the real native library against real fixture files in
-  `example/test/media/`. Must live under `example/` (a runnable Flutter app) rather than the plugin
-  root, because `test` needs a device/simulator/desktop target to launch — the plugin package itself
-  has no runnable app. CI (`.github/workflows/integration_test.yml`) runs this on Linux only, since Linux builds
-  its `.so` from source in-workflow and isn't affected by the macOS SPM-pinning gotcha above.
+- `example/integration_test/` — exercises the real native library against real fixture files in
+  `example/integration_test/fixtures/`. Must live under `example/` (a runnable Flutter app) rather
+  than the plugin root, because it needs a device/simulator/desktop target to launch — the plugin
+  package itself has no runnable app. The directory must also be named exactly `integration_test/` —
+  Flutter's tooling hardcodes that name to decide whether to build and launch a real native app
+  (required to exercise the FFI/native library) versus running as a plain host-side Dart VM test,
+  which silently never loads the compiled dylib at all. Run via `flutter test integration_test/ -d
+  <device>`, never a bare `flutter test -d <device>` (which only picks up `test/`). CI
+  (`.github/workflows/integration_test.yml`) runs this on Linux only, since Linux builds its `.so`
+  from source in-workflow and isn't affected by the macOS SPM-pinning gotcha above.
 
 ### Key design decisions
 

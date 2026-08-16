@@ -13,8 +13,16 @@ rust_changed=false
 while IFS= read -r f; do
   [ -z "$f" ] && continue
   case "$f" in
-    lib/*|test/*|example/lib/*|example/test/*|pubspec.yaml|analysis_options.yaml)
-      dart_files+=("$f")
+    lib/src/rust/*)
+      ;; # generated FRB bindings — never format/lint-checked
+    rust/src/frb_generated.rs)
+      ;; # generated FRB glue — never format/lint-checked
+    *.dart)
+      case "$f" in
+        lib/*|test/*|example/lib/*|example/integration_test/*)
+          dart_files+=("$f")
+          ;;
+      esac
       ;;
     rust/*)
       rust_changed=true

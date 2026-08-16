@@ -28,7 +28,15 @@ jobs:
         run: flutter pub get
 
       - name: Verify Formatting
-        run: dart format --output=none --set-exit-if-changed .
+        run: |
+          # dart format has no built-in exclude flag — skip lib/src/rust/
+          # (generated FRB bindings) explicitly rather than relying on it
+          # happening to already match dart format's style.
+          FILES=$(find . -name '*.dart' \
+            -not -path './lib/src/rust/*' \
+            -not -path '*/build/*' \
+            -not -path '*/.dart_tool/*')
+          dart format --output=none --set-exit-if-changed $FILES
 
       - name: Analyze
         run: dart analyze

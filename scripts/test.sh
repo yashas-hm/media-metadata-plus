@@ -109,9 +109,13 @@ PLIST
   fi
 
   echo "→ Running integration tests on '$DEVICE'..."
-  echo "  Fixtures: example/test/fixtures/"
+  echo "  Fixtures: example/integration_test/fixtures/"
   cd "$REPO_ROOT/example"
-  flutter test -d "$DEVICE"
+  # The directory must be literally named `integration_test/` — Flutter's
+  # tooling hardcodes that name to decide whether to build and launch a real
+  # native app versus running as a plain host-side Dart VM test, which never
+  # loads the actual compiled dylib.
+  flutter test integration_test/ -d "$DEVICE"
   echo ""
 fi
 

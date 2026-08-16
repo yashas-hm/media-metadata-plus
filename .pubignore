@@ -50,7 +50,7 @@ scripts/
 /rust/
 
 # Local dev test — not a consumer example
-example/test/
+example/integration_test/
 
 # Community / dev-only docs not useful to pub.dev consumers
 CLAUDE.md
