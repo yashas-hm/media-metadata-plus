@@ -1,0 +1,4 @@
+# Shell scripts must keep LF line endings even when checked out on Windows
+# with core.autocrlf enabled — CRLF breaks the #!/usr/bin/env bash shebang.
+.githooks/* text eol=lf
+scripts/**/*.sh text eol=lf
