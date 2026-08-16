@@ -57,9 +57,13 @@ CLAUDE.md
 CONTRIBUTING.md
 CODE_OF_CONDUCT.md
 SECURITY.md
-image_asset.png
+CODEOWNERS.md
+.gitassets/
+.githooks/
 .github/
 assets/
+docs/
+.gitattributes
 
 # Editor / OS
 .DS_Store

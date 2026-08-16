@@ -95,6 +95,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           VERSION="${{ steps.version.outputs.version }}"
+          BRANCH="bot/release-$VERSION"
 
           if ! git diff --quiet; then
             git add \
@@ -106,9 +107,9 @@ jobs:
               macos/media_metadata_plus/Package.swift \
               ios/media_metadata_plus/Package.swift
             git commit -m "chore: bump version to $VERSION"
-            git push origin main
           fi
 
+          git push origin "HEAD:refs/heads/$BRANCH"
           git tag "$VERSION"
           git push origin "$VERSION"
 
@@ -119,7 +120,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.versioning.outputs.version }}
+          ref: bot/release-${{ needs.versioning.outputs.version }}
 
       - name: Resolve FFmpeg tag
         run: |
@@ -185,7 +186,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.versioning.outputs.version }}
+          ref: bot/release-${{ needs.versioning.outputs.version }}
 
       - name: Resolve FFmpeg tag
         run: |
@@ -253,7 +254,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.versioning.outputs.version }}
+          ref: bot/release-${{ needs.versioning.outputs.version }}
 
       - name: Resolve FFmpeg tag
         shell: bash
@@ -294,12 +295,13 @@ jobs:
     runs-on: ubuntu-latest
     environment: pub.dev  # must match the environment name set on pub.dev automated publishing
     permissions:
-      contents: write   # create release + push Package.swift commit
-      id-token: write   # pub.dev OIDC
+      contents: write       # create release + push Package.swift commit
+      pull-requests: write  # open the main-sync PR
+      id-token: write       # pub.dev OIDC
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: main
+          ref: bot/release-${{ needs.versioning.outputs.version }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/download-artifact@v8
@@ -352,7 +354,19 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add macos/media_metadata_plus/Package.swift ios/media_metadata_plus/Package.swift
           git commit -m "chore: update SPM checksums for ${{ needs.versioning.outputs.version }}"
-          git push origin HEAD:main
+          git push origin HEAD:bot/release-${{ needs.versioning.outputs.version }}
+
+      # main is protected — the version-bump and checksum commits live on
+      # the bot branch, never on main. Open a PR so a human merges them in.
+      - name: Open PR to sync main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="bot/release-${{ needs.versioning.outputs.version }}"
+          gh pr create --base main --head "$BRANCH" \
+            --title "chore: sync main for ${{ needs.versioning.outputs.version }} release" \
+            --body "Version bump + SPM checksum updates from the ${{ needs.versioning.outputs.version }} release run." \
+            || echo "PR already exists (or nothing to merge) for $BRANCH."
 
       - name: Stop here for test runs
         if: github.event_name == 'workflow_dispatch' && !inputs.publish
@@ -396,3 +410,8 @@ jobs:
         run: |
           VERSION="${{ needs.versioning.outputs.version }}"
           git push origin --delete "$VERSION" || echo "Tag $VERSION already gone."
+
+      - name: Delete bot branch, if one was created
+        run: |
+          VERSION="${{ needs.versioning.outputs.version }}"
+          git push origin --delete "bot/release-$VERSION" || echo "Branch bot/release-$VERSION already gone."
