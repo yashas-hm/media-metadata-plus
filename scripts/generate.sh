@@ -11,11 +11,12 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # ── FFmpeg pre-built cache ────────────────────────────────────────────────────
-# ffmpeg-sys-next v7 requires FFmpeg 7.x headers. Homebrew ships 8+ (avfft.h
-# removed), so bindgen fails. Download the same pre-built used by CI.
+# ffmpeg-sys-next's bindgen needs headers matching its pinned major version
+# (see rust/Cargo.toml) — Homebrew's are usually newer. Download the same
+# pre-built used by CI.
 FFMPEG_TAG="$(cat "$REPO_ROOT/scripts/ci/ffmpeg_prebuilt_tag")"
 FFMPEG_TARGET="aarch64-apple-darwin"
-FFMPEG_CACHE="$HOME/.cache/media-metadata-plus/ffmpeg-prebuilt"
+FFMPEG_CACHE=".cache/ffmpeg-prebuilt-${FFMPEG_TAG}"
 FFMPEG_DIR_LOCAL="$FFMPEG_CACHE/$FFMPEG_TARGET"
 RELEASE_BASE="https://github.com/yashas-hm/media-metadata-plus/releases/download/ffmpeg-prebuilt-${FFMPEG_TAG}"
 

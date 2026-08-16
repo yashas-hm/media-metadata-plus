@@ -40,10 +40,11 @@ if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
   # it via MMP_LOCAL_XCFRAMEWORK instead.
   if [[ "$DEVICE" == "macos" ]]; then
     # ── FFmpeg pre-built cache ──────────────────────────────────────────────
-    # ffmpeg-sys-next v7 requires FFmpeg 7.x headers+libs. Homebrew ships 8+.
+    # ffmpeg-sys-next needs headers/libs matching its pinned major version
+    # (see rust/Cargo.toml) — Homebrew's FFmpeg is usually newer.
     FFMPEG_TAG="$(cat "$REPO_ROOT/scripts/ci/ffmpeg_prebuilt_tag")"
     FFMPEG_TARGET="aarch64-apple-darwin"
-    FFMPEG_CACHE="$HOME/.cache/media-metadata-plus/ffmpeg-prebuilt"
+    FFMPEG_CACHE="$HOME/.cache/media-metadata-plus/ffmpeg-prebuilt-${FFMPEG_TAG}"
     FFMPEG_DIR_LOCAL="$FFMPEG_CACHE/$FFMPEG_TARGET"
     RELEASE_BASE="https://github.com/yashas-hm/media-metadata-plus/releases/download/ffmpeg-prebuilt-${FFMPEG_TAG}"
 
