@@ -1,0 +1,29 @@
+README.md
+  h_489c0496f9f57d 2,11,67-69,72-80,83-84,90-93,117
+  h_489c0496f9f57d 10,12-16,18-20,26-30,70-71,81-82,105-106,116,118-126
+CLAUDE.md
+  h_489c0496f9f57d 103-105
+.github/workflows/integration_test.yml
+  h_489c0496f9f57d 54
+CONTRIBUTING.md
+  h_489c0496f9f57d 185
+example/test/fixtures/.gitkeep
+  h_489c0496f9f57d 12
+example/test/media_metadata_test.dart
+  h_489c0496f9f57d 10,12
+rust/Cargo.lock
+  h_489c0496f9f57d 1-1169
+scripts/test.sh
+  h_489c0496f9f57d 112,114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "41ece168ffa240fda6eb04140bbd464ac2bdccd1",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
