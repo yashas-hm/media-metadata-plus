@@ -1,9 +1,17 @@
 name: Release
 
+# Two ways in:
+#   1. A PR titled "[vX.Y.Z]" merging into main.
+#   2. Manual workflow_dispatch with a version input.
+# Both funnel through versioning first, which bumps every version-bearing
+# file, commits, and tags — only then do the platform builds and publish run.
+# There is deliberately no `push: tags:` trigger: the tag is always created
+# by this workflow itself, never pushed directly by a person.
+
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+  pull_request:
+    types: [closed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       version:
@@ -21,20 +29,101 @@ on:
         default: false
         type: boolean
 
-env:
-  VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
-
 permissions:
-  contents: write   # create GitHub Release + push Package.swift commit
+  contents: write   # create GitHub Release + push version-bump/Package.swift commits
   id-token: write   # pub.dev OIDC trusted publisher
 
 jobs:
 
+  # ── Bump version, commit, tag ────────────────────────────────────────────────
+  versioning:
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true && contains(github.event.pull_request.title, '[v')) ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Extract version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION=$(echo "${{ github.event.pull_request.title }}" | grep -oE '\[v[0-9]+\.[0-9]+\.[0-9]+\]' | tr -d '[]')
+          fi
+          [[ "$VERSION" != v* ]] && VERSION="v$VERSION"
+          if ! [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Could not determine a valid vX.Y.Z version (got: '$VERSION')"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if git ls-remote --exit-code --tags origin "refs/tags/$VERSION" >/dev/null 2>&1; then
+            echo "::notice::Tag $VERSION already exists on origin — skipping bump/commit/tag."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Bump version files
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          NEW_VERSION="${{ steps.version.outputs.version }}"
+          NEW_VERSION="${NEW_VERSION#v}"
+          OLD_VERSION="$(grep '^version:' pubspec.yaml | sed 's/version: //')"
+
+          sed -i "s/${OLD_VERSION}/${NEW_VERSION}/g" \
+            pubspec.yaml \
+            rust/Cargo.toml \
+            ios/media_metadata_plus.podspec \
+            macos/media_metadata_plus.podspec \
+            android/build.gradle.kts \
+            macos/media_metadata_plus/Package.swift \
+            ios/media_metadata_plus/Package.swift
+
+      - name: Commit and tag
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          VERSION="${{ steps.version.outputs.version }}"
+
+          if ! git diff --quiet; then
+            git add \
+              pubspec.yaml \
+              rust/Cargo.toml \
+              ios/media_metadata_plus.podspec \
+              macos/media_metadata_plus.podspec \
+              android/build.gradle.kts \
+              macos/media_metadata_plus/Package.swift \
+              ios/media_metadata_plus/Package.swift
+            git commit -m "chore: bump version to $VERSION"
+            git push origin main
+          fi
+
+          git tag "$VERSION"
+          git push origin "$VERSION"
+
   # ── macOS + iOS ────────────────────────────────────────────────────────────
   build-apple:
+    needs: versioning
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.versioning.outputs.version }}
 
       - name: Resolve FFmpeg tag
         run: |
@@ -77,9 +166,9 @@ jobs:
       - name: Zip xcframeworks
         run: |
           cd macos/Frameworks
-          zip -r -y "../../macos_${{ env.VERSION }}.xcframework.zip" media_metadata_plus.xcframework
+          zip -r -y "../../macos_${{ needs.versioning.outputs.version }}.xcframework.zip" media_metadata_plus.xcframework
           cd ../../ios/Frameworks
-          zip -r -y "../../ios_${{ env.VERSION }}.xcframework.zip" media_metadata_plus.xcframework
+          zip -r -y "../../ios_${{ needs.versioning.outputs.version }}.xcframework.zip" media_metadata_plus.xcframework
 
       - uses: actions/upload-artifact@v7
         with:
@@ -96,9 +185,12 @@ jobs:
 
   # ── Linux + Android ────────────────────────────────────────────────────────
   build-linux-android:
+    needs: versioning
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.versioning.outputs.version }}
 
       - name: Resolve FFmpeg tag
         run: |
@@ -162,9 +254,12 @@ jobs:
 
   # ── Windows ────────────────────────────────────────────────────────────────
   build-windows:
+    needs: versioning
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.versioning.outputs.version }}
 
       - name: Resolve FFmpeg tag
         shell: bash
@@ -202,7 +297,7 @@ jobs:
 
   # ── Release + pub.dev publish ──────────────────────────────────────────────
   release-and-publish:
-    needs: [build-apple, build-linux-android, build-windows]
+    needs: [versioning, build-apple, build-linux-android, build-windows]
     runs-on: ubuntu-latest
     environment: pub.dev  # must match the environment name set on pub.dev automated publishing
     permissions:
@@ -223,39 +318,28 @@ jobs:
       - uses: actions/download-artifact@v8
         with: { name: windows,       path: windows/ }
 
-      - name: Ensure tag exists
-        run: |
-          TAG="${{ env.VERSION }}"
-          git fetch --tags
-          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
-            git config user.name  "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git tag "$TAG"
-            git push origin "$TAG"
-          fi
-
       # Upload xcframeworks to GitHub Release (SPM binaryTarget URLs)
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ env.VERSION }}
-          name: ${{ env.VERSION }}
+          tag_name: ${{ needs.versioning.outputs.version }}
+          name: ${{ needs.versioning.outputs.version }}
           files: |
-            macos_${{ env.VERSION }}.xcframework.zip
-            ios_${{ env.VERSION }}.xcframework.zip
+            macos_${{ needs.versioning.outputs.version }}.xcframework.zip
+            ios_${{ needs.versioning.outputs.version }}.xcframework.zip
           generate_release_notes: true
 
       # SHA256 hex is the checksum format SPM expects
       - name: Compute checksums
         id: sums
         run: |
-          echo "macos=$(sha256sum macos_${{ env.VERSION }}.xcframework.zip | cut -d' ' -f1)" >> $GITHUB_OUTPUT
-          echo "ios=$(sha256sum ios_${{ env.VERSION }}.xcframework.zip   | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+          echo "macos=$(sha256sum macos_${{ needs.versioning.outputs.version }}.xcframework.zip | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+          echo "ios=$(sha256sum ios_${{ needs.versioning.outputs.version }}.xcframework.zip   | cut -d' ' -f1)" >> $GITHUB_OUTPUT
 
       # Stamp Package.swift placeholders with real URLs + checksums
       - name: Stamp Package.swift
         env:
-          VERSION: ${{ env.VERSION }}
+          VERSION: ${{ needs.versioning.outputs.version }}
           MACOS_SUM: ${{ steps.sums.outputs.macos }}
           IOS_SUM:   ${{ steps.sums.outputs.ios }}
         run: |
@@ -274,7 +358,7 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add macos/media_metadata_plus/Package.swift ios/media_metadata_plus/Package.swift
-          git commit -m "chore: update SPM checksums for ${{ env.VERSION }}"
+          git commit -m "chore: update SPM checksums for ${{ needs.versioning.outputs.version }}"
           git push origin HEAD:main
 
       - name: Stop here for test runs
@@ -292,3 +376,30 @@ jobs:
 
       - name: Publish to pub.dev
         run: flutter pub publish --force
+
+  # ── Roll back the tag + GitHub Release if anything above failed ─────────────
+  cleanup-on-failure:
+    needs: [versioning, build-apple, build-linux-android, build-windows, release-and-publish]
+    if: |
+      always() &&
+      needs.versioning.result == 'success' &&
+      (needs.build-apple.result == 'failure' || needs.build-linux-android.result == 'failure' || needs.build-windows.result == 'failure' || needs.release-and-publish.result == 'failure')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Delete GitHub Release, if one was created
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.versioning.outputs.version }}"
+          gh release delete "$VERSION" --yes || echo "No release to delete for $VERSION."
+
+      - name: Delete tag
+        run: |
+          VERSION="${{ needs.versioning.outputs.version }}"
+          git push origin --delete "$VERSION" || echo "Tag $VERSION already gone."
