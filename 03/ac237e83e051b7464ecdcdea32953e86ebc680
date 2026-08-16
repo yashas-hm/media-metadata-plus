@@ -1,0 +1,26 @@
+.github/workflows/build_ffmpeg.yml
+  h_489c0496f9f57d 1-372
+lib/src/rust/api.dart
+  h_489c0496f9f57d 7
+lib/src/rust/frb_generated.dart
+  h_489c0496f9f57d 6,12
+lib/src/rust/frb_generated.io.dart
+  h_489c0496f9f57d 6,11
+lib/src/rust/frb_generated.web.dart
+  h_489c0496f9f57d 9,13
+scripts/generate.sh
+  h_489c0496f9f57d 18-19
+scripts/test.sh
+  h_489c0496f9f57d 47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "03ac237e83e051b7464ecdcdea32953e86ebc680",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
