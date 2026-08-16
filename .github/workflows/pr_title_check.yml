@@ -1,0 +1,23 @@
+name: PR Title Check
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  check-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # Every PR needs a conventional prefix, including release PRs — those
+          # are titled e.g. "chore: [vX.Y.Z]" (see release.yml, which extracts
+          # the [vX.Y.Z] regardless of where it appears in the title).
+          if echo "$TITLE" | grep -qE '^(fix|feat|update|refactor|chore|build\(deps\)|build\(deps-dev\)):'; then
+            echo "PR title OK: $TITLE"
+          else
+            echo "::error::PR title must start with one of: fix:, feat:, update:, refactor:, chore:, build(deps):, build(deps-dev): (e.g. 'chore: [v1.5.0]' for a release PR). Got: '$TITLE'"
+            exit 1
+          fi

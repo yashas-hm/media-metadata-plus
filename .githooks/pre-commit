@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Runs format checks only for the languages actually touched by this commit.
+# Activate with: git config core.hooksPath .githooks
+
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+dart_files=()
+rust_changed=false
+
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  case "$f" in
+    lib/src/rust/*)
+      ;; # generated FRB bindings — never format/lint-checked
+    rust/src/frb_generated.rs)
+      ;; # generated FRB glue — never format/lint-checked
+    *.dart)
+      case "$f" in
+        lib/*|test/*|example/lib/*|example/integration_test/*)
+          dart_files+=("$f")
+          ;;
+      esac
+      ;;
+    rust/*)
+      rust_changed=true
+      ;;
+  esac
+done < <(git diff --cached --name-only --diff-filter=ACM)
+
+status=0
+
+if [ "${#dart_files[@]}" -gt 0 ]; then
+  echo "→ Checking Dart formatting (${#dart_files[@]} file(s))..."
+  if ! dart format --output=none --set-exit-if-changed "${dart_files[@]}"; then
+    echo "✗ Dart formatting check failed — run: dart format <file>"
+    status=1
+  fi
+fi
+
+if [ "$rust_changed" = true ]; then
+  echo "→ Checking Rust formatting..."
+  if ! (cd rust && cargo fmt --check); then
+    echo "✗ Rust formatting check failed — run: (cd rust && cargo fmt)"
+    status=1
+  fi
+fi
+
+exit "$status"

@@ -8,6 +8,7 @@
 - [Opening an Issue](#inbox_tray-opening-an-issue)
 - [Feature Requests](#love_letter-feature-requests)
 - [Triaging Issues](#mag-triaging-issues)
+- [Local Setup](#hammer_and_wrench-local-setup)
 - [Submitting Pull Requests](#repeat-submitting-pull-requests)
 - [Writing Commit Messages](#memo-writing-commit-messages)
 - [Code Review](#white_check_mark-code-review)
@@ -74,6 +75,44 @@ release. However, you are welcome to submit a pull request to help!
 
 You can triage issues which may include reproducing bug reports or asking for additional information, such as version
 numbers or reproduction instructions. Any help you can provide to quickly resolve an issue is very much appreciated!
+
+## :hammer_and_wrench: Local Setup
+
+**Always needed:**
+
+- Flutter SDK ≥3.22.0 (bundles Dart)
+- Rust via [`rustup`](https://rustup.rs) — `rust/rust-toolchain.toml` pins the exact channel; `rustup` installs it
+  automatically the first time you run any `cargo` command inside `rust/`
+- `flutter pub get` at the repo root, then again in `example/`
+- Activate the pre-commit hook (runs `dart format` / `cargo fmt` checks, scoped to whichever language your commit
+  actually touches):
+  ```bash
+  git config core.hooksPath .githooks
+  ```
+
+**Only if you touch Rust code or run integration tests** (`bash scripts/test.sh`):
+
+- `curl` and `unzip` — the scripts auto-download the pinned FFmpeg 7.x prebuilt on first run. **Don't install
+  FFmpeg manually** (e.g. via Homebrew) — Homebrew ships FFmpeg 8+, which `ffmpeg-sys-next` v7 can't build
+  against. Both tools are standard on macOS/Linux.
+- macOS: Xcode + Command Line Tools (for `xcodebuild -create-xcframework` and building the example app)
+- Linux, only if building the Linux desktop example app: `clang cmake ninja-build pkg-config libgtk-3-dev
+  liblzma-dev` (same packages CI installs — see `.github/workflows/rust_check.yml` /
+  `.github/workflows/integration_test.yml`)
+
+**Only if touching iOS/Android release builds** (`scripts/ci/build_ios.sh` / `build_android.sh`, not everyday
+dev): Xcode + iOS Rust targets via `rustup target add`, or the Android NDK + `cargo-ndk`.
+
+**Windows:** `scripts/test.sh` and `.githooks/pre-commit` are bash scripts — you'll need Git Bash (bundled with
+Git for Windows) to run them.
+
+**Verify your setup:**
+
+```bash
+bash scripts/test.sh --unit          # Dart unit tests only, no native library needed
+bash scripts/test.sh --integration   # builds Rust, fetches FFmpeg, runs the real native pipeline
+cd example && flutter run -d macos   # run the example app
+```
 
 ## :repeat: Submitting Pull Requests
 
@@ -182,8 +221,7 @@ By making a contribution to this project, I certify that:
 If you are reading this, bravo dear user and (hopefully) contributor for making it this far! You are awesome. :100:
 
 To confirm that you have read this guide and are following it as good as possible, **include this emoji at the top** of
-your issue or pull request:
-🧌
+your issue or pull request: 👾
 
 ## :pray: Credits
 

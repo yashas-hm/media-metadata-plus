@@ -1,0 +1,49 @@
+name: Flutter Analyze & Format Check
+
+on:
+  pull_request:
+    paths:
+      - 'lib/**'
+      - 'lib/src/rust/**'
+      - 'test/**'
+      - 'example/**'
+      - 'pubspec.yaml'
+      - 'analysis_options.yaml'
+      - 'flutter_rust_bridge.yaml'
+      - '.github/workflows/flutter_check.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Flutter Setup
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Verify Formatting
+        run: |
+          # dart format has no built-in exclude flag — skip lib/src/rust/
+          # (generated FRB bindings) explicitly rather than relying on it
+          # happening to already match dart format's style.
+          FILES=$(find . -name '*.dart' \
+            -not -path './lib/src/rust/*' \
+            -not -path '*/build/*' \
+            -not -path '*/.dart_tool/*')
+          dart format --output=none --set-exit-if-changed $FILES
+
+      - name: Analyze
+        run: dart analyze
+
+      - name: Analyze Example
+        working-directory: example
+        run: flutter analyze
+
+      - name: Flutter Unit Test
+        run: flutter test

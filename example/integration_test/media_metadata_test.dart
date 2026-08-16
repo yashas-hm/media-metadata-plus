@@ -8,8 +8,14 @@ import 'package:media_metadata_plus/media_metadata_plus.dart';
 // Resolves a fixture path relative to the example directory.
 // On desktop, Directory.current is the example/ directory when run via
 // `flutter test integration_test/ -d macos`.
+//
+// The directory must be literally named `integration_test/` — Flutter's
+// tooling hardcodes that name to decide whether to build and launch a real
+// native app (required for FFI/native-library tests) versus running as a
+// plain host-side Dart VM test. A `test/` directory silently runs the
+// latter, which never loads the actual compiled dylib.
 String _fixture(String name) =>
-    '${Directory.current.path}/integration_test/media/$name';
+    '${Directory.current.path}/integration_test/fixtures/$name';
 
 /// Scan JPEG bytes for the first SOF marker and return (width, height).
 (int, int)? _jpegDimensions(Uint8List bytes) {
@@ -17,6 +23,11 @@ String _fixture(String name) =>
   while (i + 1 < bytes.length) {
     if (bytes[i] != 0xFF) return null;
     final marker = bytes[i + 1];
+    // SOI has no length-prefixed payload — just skip the 2-byte marker.
+    if (marker == 0xD8) {
+      i += 2;
+      continue;
+    }
     if (marker == 0xC0 || marker == 0xC1 || marker == 0xC2) {
       if (i + 8 >= bytes.length) return null;
       final h = (bytes[i + 5] << 8) | bytes[i + 6];

@@ -24,8 +24,8 @@ pub fn read_metadata(path: String) -> anyhow::Result<MediaMeta> {
         | "image/webp"
         // TIFF-based: generic TIFF, DNG, NEF, ARW, CR2
         | "image/tiff"
-        | "image/x-canon-cr2" => crate::exif_reader::read(path, &mime),
-        "video/mp4" | "video/quicktime" => crate::video_reader::read(path, &mime),
+        | "image/x-canon-cr2" => crate::readers::exif::read(path, &mime),
+        "video/mp4" | "video/quicktime" => crate::readers::video::read(path, &mime),
         _ => Err(anyhow::anyhow!("unsupported format: {mime}")),
     }
 }
@@ -53,11 +53,11 @@ pub fn extract_video_thumbnail(
     let bytes = match mime.as_str() {
         "video/mp4" | "video/quicktime" => {
             // Fast path: embedded cover-art atom (no decode required)
-            if let Some(b) = crate::video_reader::read_covr_thumbnail(path) {
+            if let Some(b) = crate::readers::video::read_covr_thumbnail(path) {
                 b
             } else {
                 // Fallback: seek-and-decode via FFmpeg
-                crate::thumbnail_reader::extract(path, time_ms, 640)?
+                crate::readers::thumbnail::extract(path, time_ms, 640)?
             }
         }
         _ => anyhow::bail!("thumbnail extraction not supported for {mime}"),
