@@ -14,7 +14,7 @@ pub fn read(path: &Path, mime: &str) -> anyhow::Result<MediaMeta> {
             // Orientation 5-8 means the image is rotated 90° or 270°, so
             // the stored pixel dimensions are transposed relative to display.
             let orientation = read_u32(&exif, exif::Tag::Orientation).unwrap_or(1);
-            if matches!(orientation, 5 | 6 | 7 | 8) {
+            if matches!(orientation, 5..=8) {
                 std::mem::swap(&mut width, &mut height);
             }
 
@@ -118,7 +118,11 @@ fn read_u32(exif: &exif::Exif, tag: exif::Tag) -> Option<u32> {
 fn read_str(exif: &exif::Exif, tag: exif::Tag) -> Option<String> {
     if let exif::Value::Ascii(ref v) = exif.get_field(tag, exif::In::PRIMARY)?.value {
         let s = std::str::from_utf8(v.first()?).ok()?.trim().to_string();
-        if s.is_empty() { None } else { Some(s) }
+        if s.is_empty() {
+            None
+        } else {
+            Some(s)
+        }
     } else {
         None
     }
@@ -209,5 +213,57 @@ fn dms_to_decimal(dms: &exif::Value, ref_: &exif::Value) -> Option<f64> {
         Some(sign * deg)
     } else {
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_exif_datetime_parses_valid_timestamp() {
+        let expected = chrono::NaiveDate::from_ymd_opt(2021, 6, 15)
+            .unwrap()
+            .and_hms_opt(10, 30, 0)
+            .unwrap()
+            .and_utc()
+            .timestamp_millis();
+        assert_eq!(
+            parse_exif_datetime(b"2021:06:15 10:30:00").unwrap(),
+            expected
+        );
+    }
+
+    #[test]
+    fn parse_exif_datetime_rejects_malformed_input() {
+        assert!(parse_exif_datetime(b"not a date").is_err());
+        assert!(parse_exif_datetime(b"2021-06-15 10:30:00").is_err()); // wrong separators
+    }
+
+    fn rational(num: u32, denom: u32) -> exif::Rational {
+        exif::Rational { num, denom }
+    }
+
+    #[test]
+    fn dms_to_decimal_converts_north_east_as_positive() {
+        let dms = exif::Value::Rational(vec![rational(37, 1), rational(25, 1), rational(12, 1)]);
+        let dms_ref = exif::Value::Ascii(vec![b"N".to_vec()]);
+        let result = dms_to_decimal(&dms, &dms_ref).unwrap();
+        assert!((result - 37.42).abs() < 0.001, "got {result}");
+    }
+
+    #[test]
+    fn dms_to_decimal_converts_south_west_as_negative() {
+        let dms = exif::Value::Rational(vec![rational(122, 1), rational(4, 1), rational(48, 1)]);
+        let dms_ref = exif::Value::Ascii(vec![b"W".to_vec()]);
+        let result = dms_to_decimal(&dms, &dms_ref).unwrap();
+        assert!((result - (-122.08)).abs() < 0.001, "got {result}");
+    }
+
+    #[test]
+    fn dms_to_decimal_rejects_non_rational_value() {
+        let dms = exif::Value::Short(vec![1, 2, 3]);
+        let dms_ref = exif::Value::Ascii(vec![b"N".to_vec()]);
+        assert_eq!(dms_to_decimal(&dms, &dms_ref), None);
     }
 }

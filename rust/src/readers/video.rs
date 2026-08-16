@@ -87,12 +87,17 @@ fn mp4_timestamp(raw: u64) -> Option<i64> {
 /// parse (see the QuickTime sound-description note in `read`). Walks just
 /// enough of the box tree to recover movie-level timing from `mvhd` and the
 /// video track's pixel dimensions from its `tkhd`, without touching audio.
-type FallbackFields = (Option<u32>, Option<u32>, Option<u64>, Option<i64>, Option<i64>);
+type FallbackFields = (
+    Option<u32>,
+    Option<u32>,
+    Option<u64>,
+    Option<i64>,
+    Option<i64>,
+);
 
 fn read_moov_fallback(path: &Path) -> anyhow::Result<FallbackFields> {
     let mut f = std::fs::File::open(path)?;
-    let moov =
-        read_top_level_box(&mut f, b"moov").ok_or_else(|| anyhow::anyhow!("no moov box"))?;
+    let moov = read_top_level_box(&mut f, b"moov").ok_or_else(|| anyhow::anyhow!("no moov box"))?;
 
     let mvhd = find_child_box(&moov, b"mvhd").ok_or_else(|| anyhow::anyhow!("no mvhd box"))?;
     let (creation_time, modification_time, duration_ms) =
@@ -156,8 +161,11 @@ fn parse_tkhd_dimensions(tkhd: &[u8]) -> Option<(u32, u32)> {
     // reserved(8) + layer(2) + alternate_group(2) + volume(2) + reserved(2) + matrix(36) = 52
     let dims_offset = 4 + version_block_len + 52;
     let width_raw = u32::from_be_bytes(tkhd.get(dims_offset..dims_offset + 4)?.try_into().ok()?);
-    let height_raw =
-        u32::from_be_bytes(tkhd.get(dims_offset + 4..dims_offset + 8)?.try_into().ok()?);
+    let height_raw = u32::from_be_bytes(
+        tkhd.get(dims_offset + 4..dims_offset + 8)?
+            .try_into()
+            .ok()?,
+    );
     Some((width_raw >> 16, height_raw >> 16))
 }
 
@@ -250,7 +258,11 @@ fn read_ilst_bytes(meta_children: &[u8], atom_name: &[u8; 4]) -> Option<Vec<u8>>
     let data = find_child_box(atom, b"data")?;
     // iTunes data box: 4-byte type indicator + 4-byte locale + payload
     let bytes = data.get(8..)?;
-    if bytes.is_empty() { None } else { Some(bytes.to_vec()) }
+    if bytes.is_empty() {
+        None
+    } else {
+        Some(bytes.to_vec())
+    }
 }
 
 /// Extract the embedded cover-art JPEG/PNG from the `covr` iTunes atom.
@@ -304,5 +316,186 @@ fn utf8_nonempty(bytes: &[u8]) -> Option<String> {
         return None;
     }
     let s = std::str::from_utf8(bytes).ok()?.trim().to_string();
-    if s.is_empty() { None } else { Some(s) }
+    if s.is_empty() {
+        None
+    } else {
+        Some(s)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mp4_timestamp_treats_zero_as_absent() {
+        assert_eq!(mp4_timestamp(0), None);
+    }
+
+    #[test]
+    fn mp4_timestamp_converts_1904_epoch_to_unix_millis() {
+        // 100 seconds after the Unix epoch, expressed in the MP4 (1904) epoch.
+        assert_eq!(mp4_timestamp(2_082_844_800 + 100), Some(100_000));
+    }
+
+    /// Build an `mvhd` FullBox body (version 0 or 1) with the given raw field values.
+    fn build_mvhd(
+        version: u8,
+        creation: u64,
+        modification: u64,
+        timescale: u32,
+        duration: u64,
+    ) -> Vec<u8> {
+        let mut buf = vec![version, 0, 0, 0];
+        if version == 1 {
+            buf.extend_from_slice(&creation.to_be_bytes());
+            buf.extend_from_slice(&modification.to_be_bytes());
+            buf.extend_from_slice(&timescale.to_be_bytes());
+            buf.extend_from_slice(&duration.to_be_bytes());
+        } else {
+            buf.extend_from_slice(&(creation as u32).to_be_bytes());
+            buf.extend_from_slice(&(modification as u32).to_be_bytes());
+            buf.extend_from_slice(&timescale.to_be_bytes());
+            buf.extend_from_slice(&(duration as u32).to_be_bytes());
+        }
+        buf
+    }
+
+    #[test]
+    fn parse_mvhd_version0() {
+        let mvhd = build_mvhd(0, 2_082_844_800 + 100, 2_082_844_800 + 200, 1000, 2500);
+        let (creation, modification, duration_ms) = parse_mvhd(&mvhd).unwrap();
+        assert_eq!(creation, Some(100_000));
+        assert_eq!(modification, Some(200_000));
+        assert_eq!(duration_ms, Some(2500));
+    }
+
+    #[test]
+    fn parse_mvhd_version1() {
+        let mvhd = build_mvhd(1, 2_082_844_800 + 300, 2_082_844_800 + 400, 48_000, 96_000);
+        let (creation, modification, duration_ms) = parse_mvhd(&mvhd).unwrap();
+        assert_eq!(creation, Some(300_000));
+        assert_eq!(modification, Some(400_000));
+        assert_eq!(duration_ms, Some(2_000));
+    }
+
+    #[test]
+    fn parse_mvhd_zero_timescale_yields_no_duration() {
+        let mvhd = build_mvhd(0, 0, 0, 0, 0);
+        let (creation, modification, duration_ms) = parse_mvhd(&mvhd).unwrap();
+        assert_eq!(creation, None);
+        assert_eq!(modification, None);
+        assert_eq!(duration_ms, None);
+    }
+
+    #[test]
+    fn parse_mvhd_rejects_truncated_box() {
+        assert_eq!(parse_mvhd(&[0, 0, 0]), None);
+    }
+
+    /// Build a `tkhd` FullBox body (version 0 or 1) with the given pixel dimensions
+    /// (fixed-point 16.16, so plain integers are shifted left by 16 bits).
+    fn build_tkhd(version: u8, width: u32, height: u32) -> Vec<u8> {
+        let version_block_len = if version == 1 { 32 } else { 20 };
+        let mut buf = vec![version, 0, 0, 0];
+        buf.extend(std::iter::repeat(0u8).take(version_block_len));
+        buf.extend(std::iter::repeat(0u8).take(52)); // reserved/layer/volume/matrix
+        buf.extend_from_slice(&(width << 16).to_be_bytes());
+        buf.extend_from_slice(&(height << 16).to_be_bytes());
+        buf
+    }
+
+    #[test]
+    fn parse_tkhd_dimensions_version0() {
+        let tkhd = build_tkhd(0, 480, 270);
+        assert_eq!(parse_tkhd_dimensions(&tkhd), Some((480, 270)));
+    }
+
+    #[test]
+    fn parse_tkhd_dimensions_version1() {
+        let tkhd = build_tkhd(1, 640, 360);
+        assert_eq!(parse_tkhd_dimensions(&tkhd), Some((640, 360)));
+    }
+
+    #[test]
+    fn parse_tkhd_dimensions_rejects_truncated_box() {
+        assert_eq!(parse_tkhd_dimensions(&[0, 0, 0]), None);
+    }
+
+    fn assert_close(actual: Option<(f64, f64, Option<f64>)>, lat: f64, lon: f64, alt: Option<f64>) {
+        let (a_lat, a_lon, a_alt) = actual.unwrap();
+        assert!((a_lat - lat).abs() < 1e-6, "lat: got {a_lat}, want {lat}");
+        assert!((a_lon - lon).abs() < 1e-6, "lon: got {a_lon}, want {lon}");
+        match (a_alt, alt) {
+            (Some(a), Some(e)) => assert!((a - e).abs() < 1e-6, "alt: got {a}, want {e}"),
+            (None, None) => {}
+            (a, e) => panic!("alt: got {a:?}, want {e:?}"),
+        }
+    }
+
+    #[test]
+    fn parse_iso6709_lat_lon_only() {
+        assert_close(
+            parse_iso6709("+37.4220-122.0840/"),
+            37.4220,
+            -122.0840,
+            None,
+        );
+    }
+
+    #[test]
+    fn parse_iso6709_with_altitude() {
+        assert_close(
+            parse_iso6709("+27.5916+086.5640+8850/"),
+            27.5916,
+            86.5640,
+            Some(8850.0),
+        );
+    }
+
+    #[test]
+    fn parse_iso6709_negative_latitude() {
+        assert_close(
+            parse_iso6709("-33.8688+151.2093/"),
+            -33.8688,
+            151.2093,
+            None,
+        );
+    }
+
+    #[test]
+    fn parse_iso6709_tolerates_missing_trailing_slash() {
+        assert_close(parse_iso6709("+37.4220-122.0840"), 37.4220, -122.0840, None);
+    }
+
+    #[test]
+    fn parse_iso6709_rejects_empty_string() {
+        assert_eq!(parse_iso6709(""), None);
+        assert_eq!(parse_iso6709("/"), None);
+    }
+
+    #[test]
+    fn parse_3gpp_text_reads_declared_length() {
+        // length(2)=5, language(2)=0, then "hello" plus trailing garbage past the
+        // declared length that must be ignored.
+        let mut data = vec![0, 5, 0, 0];
+        data.extend_from_slice(b"helloXXXX");
+        assert_eq!(parse_3gpp_text(&data), Some("hello".to_string()));
+    }
+
+    #[test]
+    fn parse_3gpp_text_falls_back_when_length_invalid() {
+        // declared length larger than the remaining buffer — falls back to
+        // reading everything after the 4-byte header.
+        let mut data = vec![255, 255, 0, 0];
+        data.extend_from_slice(b"fallback");
+        assert_eq!(parse_3gpp_text(&data), Some("fallback".to_string()));
+    }
+
+    #[test]
+    fn utf8_nonempty_trims_and_rejects_blank() {
+        assert_eq!(utf8_nonempty(b"  hello  "), Some("hello".to_string()));
+        assert_eq!(utf8_nonempty(b""), None);
+        assert_eq!(utf8_nonempty(b"   "), None);
+    }
 }
