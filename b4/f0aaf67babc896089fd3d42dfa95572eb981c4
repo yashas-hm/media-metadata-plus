@@ -1,0 +1,18 @@
+.gitattributes
+  h_489c0496f9f57d 1-4
+.githooks/pre-commit
+  h_489c0496f9f57d 1-43
+CONTRIBUTING.md
+  h_489c0496f9f57d 11,79-116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "b4f0aaf67babc896089fd3d42dfa95572eb981c4",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
