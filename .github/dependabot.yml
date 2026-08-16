@@ -28,7 +28,16 @@ updates:
       cargo-dependencies:
         patterns:
           - "*"
+        exclude-patterns:
+          - "ffmpeg-next"
+      # Major bumps need a matching prebuilt rebuild (see rust/Cargo.toml) —
+      # kept separate so they're never bundled with routine updates.
+      ffmpeg-next-major:
+        patterns:
+          - "ffmpeg-next"
+        update-types:
+          - "major"
     ignore:
-      # Pinned with "=2.12.0" and must stay in lockstep with the Dart-side
-      # flutter_rust_bridge dependency — bump both together by hand.
+      # Pinned to an exact version and must stay in lockstep with the
+      # Dart-side flutter_rust_bridge dependency — bump both together by hand.
       - dependency-name: "flutter_rust_bridge"

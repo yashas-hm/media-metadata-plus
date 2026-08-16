@@ -294,6 +294,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -345,15 +346,30 @@ jobs:
           files: artifacts/*.zip
           fail_on_unmatched_files: true
 
-      # When triggered manually, write the new tag back to the file so that
-      # generate.sh, test.sh, and release.yml all stay in sync.
-      # The GITHUB_TOKEN push does not re-trigger this workflow.
-      - name: Update ffmpeg_prebuilt_tag
+      # When triggered manually, open a PR updating the tag file so
+      # generate.sh, test.sh, and release.yml stay in sync — never pushed to
+      # main directly. This also gets a free end-to-end check: the PR's own
+      # integration_test.yml run downloads the release created just above
+      # and builds against it, validating the new FFmpeg build before merge.
+      - name: Open PR to update ffmpeg_prebuilt_tag
         if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "${{ env.FFMPEG_TAG }}" > scripts/ci/ffmpeg_prebuilt_tag
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH="bot/ffmpeg-prebuilt-tag-${{ env.FFMPEG_TAG }}"
+          git checkout -b "$BRANCH"
+          echo "${{ env.FFMPEG_TAG }}" > scripts/ci/ffmpeg_prebuilt_tag
           git add scripts/ci/ffmpeg_prebuilt_tag
-          git diff --staged --quiet || git commit -m "chore: update ffmpeg prebuilt tag to ${{ env.FFMPEG_TAG }}"
-          git push origin HEAD:main
+
+          if git diff --staged --quiet; then
+            echo "Already at ${{ env.FFMPEG_TAG }} — nothing to open a PR for."
+          else
+            git commit -m "chore: update ffmpeg prebuilt tag to ${{ env.FFMPEG_TAG }}"
+            git push origin "$BRANCH"
+            gh pr create --base main --head "$BRANCH" \
+              --title "chore: update ffmpeg prebuilt tag to ${{ env.FFMPEG_TAG }}" \
+              --body "Points generate.sh, test.sh, and release.yml at the \`ffmpeg-prebuilt-${{ env.FFMPEG_TAG }}\` release created by this run."
+          fi
