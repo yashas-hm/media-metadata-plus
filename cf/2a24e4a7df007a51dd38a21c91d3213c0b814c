@@ -1,0 +1,14 @@
+.github/workflows/release.yml
+  h_489c0496f9f57d 397,410-417
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "cf2a24e4a7df007a51dd38a21c91d3213c0b814c",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
