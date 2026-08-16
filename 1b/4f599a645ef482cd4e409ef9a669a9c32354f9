@@ -1,0 +1,14 @@
+scripts/test.sh
+  h_489c0496f9f57d 36-40,59-86,88-94,96-108
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "1b4f599a645ef482cd4e409ef9a669a9c32354f9",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
