@@ -1,29 +1,50 @@
-use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 
 use crate::api::MediaMeta;
+use crate::container::isobmff::{find_all_child_boxes, find_child_box, read_top_level_box};
 
 pub fn read(path: &Path, mime: &str) -> anyhow::Result<MediaMeta> {
     let f = std::fs::File::open(path)?;
     let size = f.metadata()?.len();
-    let mp4 = mp4::Mp4Reader::read_header(f, size)?;
 
-    let track = mp4
-        .tracks()
-        .values()
-        .find(|t| t.track_type().ok() == Some(mp4::TrackType::Video));
+    let (width, height, duration_ms, creation_time, modification_time) =
+        match mp4::Mp4Reader::read_header(f, size) {
+            Ok(mp4) => {
+                let track = mp4
+                    .tracks()
+                    .values()
+                    .find(|t| t.track_type().ok() == Some(mp4::TrackType::Video));
 
-    let (width, height, duration_ms) = match track {
-        Some(t) => (
-            Some(t.width() as u32),
-            Some(t.height() as u32),
-            Some(t.duration().as_millis() as u64),
-        ),
-        None => (None, None, None),
-    };
+                let (width, height, duration_ms) = match track {
+                    Some(t) => (
+                        Some(t.width() as u32),
+                        Some(t.height() as u32),
+                        Some(t.duration().as_millis() as u64),
+                    ),
+                    None => (None, None, None),
+                };
 
-    let creation_time = read_creation_time(&mp4);
-    let modification_time = read_modification_time(&mp4);
+                (
+                    width,
+                    height,
+                    duration_ms,
+                    read_creation_time(&mp4),
+                    read_modification_time(&mp4),
+                )
+            }
+            // Some QuickTime .mov files describe their audio track with a
+            // legacy "Sound Sample Description" (version 1/2, with extra
+            // fields and a nested `wave` atom) that the `mp4` crate's
+            // ISO-only mp4a parser can't handle, failing the entire header
+            // parse even though we only need the video track and
+            // movie-level timing. Fall back to a minimal manual box walk
+            // for just those fields; if that also fails, surface the
+            // original (more informative) crate error.
+            Err(crate_err) => match read_moov_fallback(path) {
+                Ok(fields) => fields,
+                Err(_) => return Err(crate_err.into()),
+            },
+        };
 
     // GPS and camera metadata — see read_itunes_text for the paths tried
     let (latitude, longitude, altitude) = read_gps(path)
@@ -60,6 +81,84 @@ fn mp4_timestamp(raw: u64) -> Option<i64> {
     // MP4 epoch is 1904-01-01; offset to Unix epoch is 2082844800 seconds
     let unix_secs = raw.saturating_sub(2082844800) as i64;
     Some(unix_secs * 1000)
+}
+
+/// Manual fallback for files whose `moov` box the `mp4` crate can't fully
+/// parse (see the QuickTime sound-description note in `read`). Walks just
+/// enough of the box tree to recover movie-level timing from `mvhd` and the
+/// video track's pixel dimensions from its `tkhd`, without touching audio.
+type FallbackFields = (Option<u32>, Option<u32>, Option<u64>, Option<i64>, Option<i64>);
+
+fn read_moov_fallback(path: &Path) -> anyhow::Result<FallbackFields> {
+    let mut f = std::fs::File::open(path)?;
+    let moov =
+        read_top_level_box(&mut f, b"moov").ok_or_else(|| anyhow::anyhow!("no moov box"))?;
+
+    let mvhd = find_child_box(&moov, b"mvhd").ok_or_else(|| anyhow::anyhow!("no mvhd box"))?;
+    let (creation_time, modification_time, duration_ms) =
+        parse_mvhd(mvhd).ok_or_else(|| anyhow::anyhow!("malformed mvhd box"))?;
+
+    let mut width = None;
+    let mut height = None;
+    for trak in find_all_child_boxes(&moov, b"trak") {
+        let is_video = find_child_box(trak, b"mdia")
+            .and_then(|mdia| find_child_box(mdia, b"hdlr"))
+            .and_then(|hdlr| hdlr.get(8..12))
+            .map(|handler_type| handler_type == b"vide")
+            .unwrap_or(false);
+        if !is_video {
+            continue;
+        }
+        if let Some(tkhd) = find_child_box(trak, b"tkhd") {
+            if let Some(dims) = parse_tkhd_dimensions(tkhd) {
+                (width, height) = (Some(dims.0), Some(dims.1));
+            }
+        }
+        break;
+    }
+
+    Ok((width, height, duration_ms, creation_time, modification_time))
+}
+
+/// Parse `moov > mvhd` (a FullBox): returns (creation_time, modification_time, duration_ms).
+fn parse_mvhd(mvhd: &[u8]) -> Option<(Option<i64>, Option<i64>, Option<u64>)> {
+    let version = *mvhd.first()?;
+    let (creation_raw, modification_raw, timescale, duration_raw) = if version == 1 {
+        (
+            u64::from_be_bytes(mvhd.get(4..12)?.try_into().ok()?),
+            u64::from_be_bytes(mvhd.get(12..20)?.try_into().ok()?),
+            u32::from_be_bytes(mvhd.get(20..24)?.try_into().ok()?),
+            u64::from_be_bytes(mvhd.get(24..32)?.try_into().ok()?),
+        )
+    } else {
+        (
+            u32::from_be_bytes(mvhd.get(4..8)?.try_into().ok()?) as u64,
+            u32::from_be_bytes(mvhd.get(8..12)?.try_into().ok()?) as u64,
+            u32::from_be_bytes(mvhd.get(12..16)?.try_into().ok()?),
+            u32::from_be_bytes(mvhd.get(16..20)?.try_into().ok()?) as u64,
+        )
+    };
+
+    let duration_ms = (timescale > 0).then(|| duration_raw.saturating_mul(1000) / timescale as u64);
+    Some((
+        mp4_timestamp(creation_raw),
+        mp4_timestamp(modification_raw),
+        duration_ms,
+    ))
+}
+
+/// Parse `trak > tkhd` (a FullBox) for pixel width/height (fixed-point 16.16).
+fn parse_tkhd_dimensions(tkhd: &[u8]) -> Option<(u32, u32)> {
+    let version = *tkhd.first()?;
+    // version 1: creation(8)+modification(8)+track_ID(4)+reserved(4)+duration(8) = 32
+    // version 0: creation(4)+modification(4)+track_ID(4)+reserved(4)+duration(4) = 20
+    let version_block_len = if version == 1 { 32 } else { 20 };
+    // reserved(8) + layer(2) + alternate_group(2) + volume(2) + reserved(2) + matrix(36) = 52
+    let dims_offset = 4 + version_block_len + 52;
+    let width_raw = u32::from_be_bytes(tkhd.get(dims_offset..dims_offset + 4)?.try_into().ok()?);
+    let height_raw =
+        u32::from_be_bytes(tkhd.get(dims_offset + 4..dims_offset + 8)?.try_into().ok()?);
+    Some((width_raw >> 16, height_raw >> 16))
 }
 
 fn read_gps(path: &Path) -> Option<(f64, f64, Option<f64>)> {
@@ -206,64 +305,4 @@ fn utf8_nonempty(bytes: &[u8]) -> Option<String> {
     }
     let s = std::str::from_utf8(bytes).ok()?.trim().to_string();
     if s.is_empty() { None } else { Some(s) }
-}
-
-// ── MP4 box scanner ───────────────────────────────────────────────────────────
-
-/// Scan a file sequentially from the start, seeking past non-target top-level boxes.
-/// Returns the content bytes of the named box (excluding its 8-byte header).
-fn read_top_level_box(f: &mut std::fs::File, name: &[u8; 4]) -> Option<Vec<u8>> {
-    f.seek(SeekFrom::Start(0)).ok()?;
-    loop {
-        let mut size_bytes = [0u8; 4];
-        f.read_exact(&mut size_bytes).ok()?;
-        let raw_size = u32::from_be_bytes(size_bytes);
-
-        let mut name_bytes = [0u8; 4];
-        f.read_exact(&mut name_bytes).ok()?;
-
-        let (content_size, is_target) = if raw_size == 1 {
-            // Extended size: next 8 bytes hold the full box size (including all headers)
-            let mut ext = [0u8; 8];
-            f.read_exact(&mut ext).ok()?;
-            let full = u64::from_be_bytes(ext);
-            (full.saturating_sub(16), &name_bytes == name)
-        } else if raw_size == 0 {
-            // Box extends to end of file
-            return if &name_bytes == name {
-                let mut content = Vec::new();
-                f.read_to_end(&mut content).ok()?;
-                Some(content)
-            } else {
-                None
-            };
-        } else {
-            (raw_size as u64 - 8, &name_bytes == name)
-        };
-
-        if is_target {
-            let mut content = vec![0u8; content_size as usize];
-            f.read_exact(&mut content).ok()?;
-            return Some(content);
-        }
-
-        f.seek(SeekFrom::Current(content_size as i64)).ok()?;
-    }
-}
-
-/// Scan a byte slice for a named child box.
-/// Returns the child's content bytes (excluding its 8-byte header).
-fn find_child_box<'a>(data: &'a [u8], name: &[u8; 4]) -> Option<&'a [u8]> {
-    let mut i = 0usize;
-    while i + 8 <= data.len() {
-        let size = u32::from_be_bytes([data[i], data[i + 1], data[i + 2], data[i + 3]]) as usize;
-        if size < 8 || i + size > data.len() {
-            break;
-        }
-        if data[i + 4..i + 8] == *name {
-            return Some(&data[i + 8..i + size]);
-        }
-        i += size;
-    }
-    None
 }
