@@ -1,3 +1,7 @@
+## 1.5.0
+
+* Fixed MOV files failing to return **any** metadata (duration, dimensions, creation time all `null`) when the file's audio track used a legacy QuickTime "Sound Sample Description" (version 1/2, common in older or third-party `.mov` exports). The underlying `mp4` crate only understands the newer ISO format and errored on the whole file; metadata now falls back to reading `moov`/`mvhd`/`tkhd` directly when that happens.
+
 ## 1.4.2
 
 * Fixed video thumbnails being rotated/tilted — FFmpeg frame extraction now reads the `rotate` metadata from the video stream and applies the correct pixel rotation before encoding. Affects portrait videos from iPhone, Android, and other cameras that store rotation in the track header matrix.

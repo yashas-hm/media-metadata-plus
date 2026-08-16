@@ -16,7 +16,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # pre-built used by CI.
 FFMPEG_TAG="$(cat "$REPO_ROOT/scripts/ci/ffmpeg_prebuilt_tag")"
 FFMPEG_TARGET="aarch64-apple-darwin"
-FFMPEG_CACHE="$HOME/.cache/media-metadata-plus/ffmpeg-prebuilt-${FFMPEG_TAG}"
+FFMPEG_CACHE=".cache/ffmpeg-prebuilt-${FFMPEG_TAG}"
 FFMPEG_DIR_LOCAL="$FFMPEG_CACHE/$FFMPEG_TARGET"
 RELEASE_BASE="https://github.com/yashas-hm/media-metadata-plus/releases/download/ffmpeg-prebuilt-${FFMPEG_TAG}"
 

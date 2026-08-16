@@ -92,9 +92,9 @@ numbers or reproduction instructions. Any help you can provide to quickly resolv
 
 **Only if you touch Rust code or run integration tests** (`bash scripts/test.sh`):
 
-- `curl` and `unzip` — the scripts auto-download the pinned FFmpeg 7.x prebuilt on first run. **Don't install
-  FFmpeg manually** (e.g. via Homebrew) — Homebrew ships FFmpeg 8+, which `ffmpeg-sys-next` v7 can't build
-  against. Both tools are standard on macOS/Linux.
+- `curl` and `unzip` — the scripts auto-download the pinned FFmpeg prebuilt on first run. **Don't install
+  FFmpeg manually** (e.g. via Homebrew) — its version is usually newer than what `ffmpeg-sys-next` is
+  pinned to build against (see `rust/Cargo.toml`). Both tools are standard on macOS/Linux.
 - macOS: Xcode + Command Line Tools (for `xcodebuild -create-xcframework` and building the example app)
 - Linux, only if building the Linux desktop example app: `clang cmake ninja-build pkg-config libgtk-3-dev
   liblzma-dev` (same packages CI installs — see `.github/workflows/rust_check.yml` /
