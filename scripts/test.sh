@@ -109,9 +109,9 @@ PLIST
   fi
 
   echo "→ Running integration tests on '$DEVICE'..."
-  echo "  Fixtures: example/integration_test/media/"
+  echo "  Fixtures: example/test/fixtures/"
   cd "$REPO_ROOT/example"
-  flutter test integration_test/ -d "$DEVICE"
+  flutter test -d "$DEVICE"
   echo ""
 fi
 

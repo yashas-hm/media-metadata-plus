@@ -182,8 +182,7 @@ By making a contribution to this project, I certify that:
 If you are reading this, bravo dear user and (hopefully) contributor for making it this far! You are awesome. :100:
 
 To confirm that you have read this guide and are following it as good as possible, **include this emoji at the top** of
-your issue or pull request:
-🧌
+your issue or pull request: 👾
 
 ## :pray: Credits
 

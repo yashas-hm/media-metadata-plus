@@ -100,9 +100,9 @@ when that env var is unset. See [`docs/decisions.md`](docs/decisions.md) for the
 ### Testing layout
 
 - `test/` — pure-Dart unit tests, no native library, run anywhere
-- `example/integration_test/` — exercises the real native library against real fixture files in
-  `example/integration_test/media/`. Must live under `example/` (a runnable Flutter app) rather than the plugin
-  root, because `integration_test` needs a device/simulator/desktop target to launch — the plugin package itself
+- `example/test/` — exercises the real native library against real fixture files in
+  `example/test/media/`. Must live under `example/` (a runnable Flutter app) rather than the plugin
+  root, because `test` needs a device/simulator/desktop target to launch — the plugin package itself
   has no runnable app. CI (`.github/workflows/integration_test.yml`) runs this on Linux only, since Linux builds
   its `.so` from source in-workflow and isn't affected by the macOS SPM-pinning gotcha above.
 

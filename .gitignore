@@ -34,7 +34,6 @@ pubspec.lock
 
 # Rust
 /rust/target/
-Cargo.lock
 
 # Android build artifacts
 android/.gradle/

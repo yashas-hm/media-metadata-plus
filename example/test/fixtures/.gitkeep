@@ -9,7 +9,7 @@
 #   document.txt    — unsupported format (expect null)
 #   corrupt.jpg     — truncated/invalid JPEG (expect null)
 #
-# 0.3.0 RAW fixtures (optional — tests are skipped if files are absent):
+#   RAW fixtures (optional — tests are skipped if files are absent):
 #   photo.tiff      — TIFF with EXIF
 #   photo.dng       — Adobe DNG (RAW)
 #   photo.nef       — Nikon NEF (RAW)
