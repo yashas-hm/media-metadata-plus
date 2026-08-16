@@ -8,8 +8,7 @@ import 'package:media_metadata_plus/media_metadata_plus.dart';
 // Resolves a fixture path relative to the example directory.
 // On desktop, Directory.current is the example/ directory when run via
 // `flutter test -d macos`.
-String _fixture(String name) =>
-    '${Directory.current.path}/test/fixtures/$name';
+String _fixture(String name) => '${Directory.current.path}/test/fixtures/$name';
 
 /// Scan JPEG bytes for the first SOF marker and return (width, height).
 (int, int)? _jpegDimensions(Uint8List bytes) {
