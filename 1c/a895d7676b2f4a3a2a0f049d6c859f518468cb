@@ -1,0 +1,16 @@
+macos/.gitignore
+  h_489c0496f9f57d 9
+macos/media_metadata_plus/Package.swift
+  h_489c0496f9f57d 2,5-16,30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "1ca895d7676b2f4a3a2a0f049d6c859f518468cb",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
