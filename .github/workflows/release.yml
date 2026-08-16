@@ -19,11 +19,6 @@ on:
         description: 'Version tag (e.g. v2.0.0)'
         required: true
         type: string
-      ffmpeg_prebuilt_tag:
-        description: 'FFmpeg prebuilt release tag (e.g. n7.1.1)'
-        required: true
-        default: 'n7.1.1'
-        type: string
       publish:
         description: 'Publish to pub.dev after releasing'
         required: false
@@ -128,8 +123,7 @@ jobs:
 
       - name: Resolve FFmpeg tag
         run: |
-          TAG="${{ inputs.ffmpeg_prebuilt_tag }}"
-          [[ -z "$TAG" ]] && TAG="$(cat scripts/ci/ffmpeg_prebuilt_tag)"
+          TAG="$(cat scripts/ci/ffmpeg_prebuilt_tag)"
           echo "FFMPEG_PREBUILT_BASE=https://github.com/yashas-hm/media-metadata-plus/releases/download/ffmpeg-prebuilt-${TAG}" >> $GITHUB_ENV
 
       - name: Install Rust targets
@@ -195,8 +189,7 @@ jobs:
 
       - name: Resolve FFmpeg tag
         run: |
-          TAG="${{ inputs.ffmpeg_prebuilt_tag }}"
-          [[ -z "$TAG" ]] && TAG="$(cat scripts/ci/ffmpeg_prebuilt_tag)"
+          TAG="$(cat scripts/ci/ffmpeg_prebuilt_tag)"
           echo "FFMPEG_PREBUILT_BASE=https://github.com/yashas-hm/media-metadata-plus/releases/download/ffmpeg-prebuilt-${TAG}" >> $GITHUB_ENV
 
       - name: Install Rust targets
@@ -265,8 +258,7 @@ jobs:
       - name: Resolve FFmpeg tag
         shell: bash
         run: |
-          TAG="${{ inputs.ffmpeg_prebuilt_tag }}"
-          [[ -z "$TAG" ]] && TAG="$(cat scripts/ci/ffmpeg_prebuilt_tag)"
+          TAG="$(cat scripts/ci/ffmpeg_prebuilt_tag)"
           echo "FFMPEG_PREBUILT_BASE=https://github.com/yashas-hm/media-metadata-plus/releases/download/ffmpeg-prebuilt-${TAG}" >> $GITHUB_ENV
 
       - name: Download prebuilt FFmpeg
