@@ -1,0 +1,16 @@
+.github/workflows/flutter_check.yml
+  h_489c0496f9f57d 5-13
+.github/workflows/rust_check.yml
+  h_489c0496f9f57d 1-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "94d720a2a4434cef72940e421ef060cd31021214",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
