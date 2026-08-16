@@ -33,15 +33,12 @@ if [[ "$MODE" == "unit" || "$MODE" == "all" ]]; then
 fi
 
 if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
-  # flutter test on macOS doesn't trigger Cargo via ffiPlugin.
-  # Build the dylib manually and place it where FRB's debug loader expects it:
-  #   ~/Library/Containers/<bundle-id>/Data/rust/target/release/lib<name>.dylib
+  # macOS SPM's binaryTarget normally pins the *published* release xcframework
+  # (see macos/media_metadata_plus/Package.swift), so `flutter test -d macos`
+  # would otherwise exercise last release's Rust code, not this working tree.
+  # Build a local xcframework from current source and point Package.swift at
+  # it via MMP_LOCAL_XCFRAMEWORK instead.
   if [[ "$DEVICE" == "macos" ]]; then
-    BUNDLE_ID="com.example.example"
-    DYLIB_NAME="libmedia_metadata_plus.dylib"
-    SANDBOX_DIR="$HOME/Library/Containers/$BUNDLE_ID/Data/rust/target/release"
-    DYLIB_SRC="$REPO_ROOT/rust/target/release/$DYLIB_NAME"
-
     # ── FFmpeg pre-built cache ──────────────────────────────────────────────
     # ffmpeg-sys-next v7 requires FFmpeg 7.x headers+libs. Homebrew ships 8+.
     FFMPEG_TAG="$(cat "$REPO_ROOT/scripts/ci/ffmpeg_prebuilt_tag")"
@@ -57,17 +54,58 @@ if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
       unzip -q "$FFMPEG_CACHE/$FFMPEG_TARGET.zip" -d "$FFMPEG_CACHE"
       rm "$FFMPEG_CACHE/$FFMPEG_TARGET.zip"
     fi
-    export FFMPEG_DIR="$FFMPEG_DIR_LOCAL"
     # ───────────────────────────────────────────────────────────────────────
 
-    echo "→ Building Rust library (release)..."
-    cargo build --release --manifest-path "$REPO_ROOT/rust/Cargo.toml"
+    echo "→ Building local xcframework for integration testing (host arch only)..."
+    FFMPEG_DIR="$FFMPEG_DIR_LOCAL" cargo build --release \
+      --manifest-path "$REPO_ROOT/rust/Cargo.toml" --target "$FFMPEG_TARGET"
 
-    echo "→ Staging dylib for FRB debug loader..."
-    mkdir -p "$SANDBOX_DIR"
-    cp "$DYLIB_SRC" "$SANDBOX_DIR/$DYLIB_NAME"
+    FW_DIR="$REPO_ROOT/rust/target/$FFMPEG_TARGET/release/media_metadata_plus.framework"
+    rm -rf "$FW_DIR"
+    mkdir -p "$FW_DIR/Versions/A/Resources"
+    cp "$REPO_ROOT/rust/target/$FFMPEG_TARGET/release/libmedia_metadata_plus.dylib" \
+      "$FW_DIR/Versions/A/media_metadata_plus"
+    cat > "$FW_DIR/Versions/A/Resources/Info.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key>       <string>media_metadata_plus</string>
+  <key>CFBundleIdentifier</key>       <string>dev.yashashm.media-metadata-plus</string>
+  <key>CFBundleInfoDictionaryVersion</key> <string>6.0</string>
+  <key>CFBundlePackageType</key>      <string>FMWK</string>
+  <key>CFBundleVersion</key>          <string>1</string>
+  <key>CFBundleShortVersionString</key> <string>1.0</string>
+</dict>
+</plist>
+PLIST
+    ln -sf A "$FW_DIR/Versions/Current"
+    ln -sf "Versions/Current/media_metadata_plus" "$FW_DIR/media_metadata_plus"
+    ln -sf "Versions/Current/Resources" "$FW_DIR/Resources"
+    install_name_tool -id "@rpath/media_metadata_plus.framework/media_metadata_plus" \
+      "$FW_DIR/Versions/A/media_metadata_plus"
 
-    rm -rf "$FFMPEG_CACHE"
+    XCFW="$REPO_ROOT/macos/Frameworks/media_metadata_plus.xcframework"
+    rm -rf "$XCFW"
+    mkdir -p "$REPO_ROOT/macos/Frameworks"
+    xcodebuild -create-xcframework -framework "$FW_DIR" -output "$XCFW"
+    # SPM's binaryTarget(path:) must be relative to the package root
+    # (macos/media_metadata_plus/), not an absolute path.
+    export MMP_LOCAL_XCFRAMEWORK="../Frameworks/media_metadata_plus.xcframework"
+
+    # Force SPM to re-resolve against the local xcframework instead of any
+    # cached copy of the published release.
+    rm -rf "$REPO_ROOT/example/build/macos" "$REPO_ROOT/example/macos/Flutter/ephemeral"
+
+    # example/macos/ is a generated dir (gitignored) — under App Sandbox,
+    # Directory.current inside the test app resolves to the sandbox
+    # container instead of example/, breaking every fixture path. Disable it
+    # for the Debug configuration only (Release entitlements are untouched).
+    if [[ -f "$REPO_ROOT/example/macos/Runner/DebugProfile.entitlements" ]]; then
+      /usr/libexec/PlistBuddy \
+        -c "Set :com.apple.security.app-sandbox false" \
+        "$REPO_ROOT/example/macos/Runner/DebugProfile.entitlements"
+    fi
   fi
 
   echo "→ Running integration tests on '$DEVICE'..."
