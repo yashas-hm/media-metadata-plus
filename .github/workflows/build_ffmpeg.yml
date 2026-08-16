@@ -5,9 +5,6 @@ name: Build Prebuilt FFmpeg
 # The resulting GitHub release (tagged ffmpeg-prebuilt-<tag>) is consumed by
 # the main release workflow via FFMPEG_DIR on each build runner.
 on:
-  push:
-    branches: [main]
-    paths: [scripts/ci/ffmpeg_prebuilt_tag]
   workflow_dispatch:
     inputs:
       ffmpeg_tag:
