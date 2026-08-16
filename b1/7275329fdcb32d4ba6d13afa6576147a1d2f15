@@ -1,0 +1,20 @@
+rust/src/mime.rs
+  h_489c0496f9f57d 43-129
+rust/src/readers/exif.rs
+  h_489c0496f9f57d 17,121-125,218-269
+rust/src/readers/thumbnail.rs
+  h_489c0496f9f57d 198
+rust/src/readers/video.rs
+  h_489c0496f9f57d 90-96,100,164-168,261-265,319-500
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "b17275329fdcb32d4ba6d13afa6576147a1d2f15",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
