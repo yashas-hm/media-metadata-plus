@@ -17,6 +17,11 @@ String _fixture(String name) =>
   while (i + 1 < bytes.length) {
     if (bytes[i] != 0xFF) return null;
     final marker = bytes[i + 1];
+    // SOI has no length-prefixed payload — just skip the 2-byte marker.
+    if (marker == 0xD8) {
+      i += 2;
+      continue;
+    }
     if (marker == 0xC0 || marker == 0xC1 || marker == 0xC2) {
       if (i + 8 >= bytes.length) return null;
       final h = (bytes[i + 5] << 8) | bytes[i + 6];
