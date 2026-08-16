@@ -1,0 +1,28 @@
+.githooks/pre-commit
+  h_489c0496f9f57d 16-25
+.github/workflows/flutter_check.yml
+  h_489c0496f9f57d 31-39
+.github/workflows/integration_test.yml
+  h_489c0496f9f57d 54
+.pubignore
+  h_489c0496f9f57d 53
+CLAUDE.md
+  h_489c0496f9f57d 103-112
+analysis_options.yaml
+  h_489c0496f9f57d 10-11
+example/integration_test/media_metadata_test.dart
+  h_489c0496f9f57d 10-18
+scripts/test.sh
+  h_489c0496f9f57d 112,114-118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "019342872ea630f92d118e4e373d4b1b36506e8c",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
