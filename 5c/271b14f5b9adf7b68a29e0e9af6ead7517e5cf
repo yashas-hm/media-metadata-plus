@@ -1,0 +1,28 @@
+docs/decisions.md
+  h_489c0496f9f57d 1-66
+docs/exif_write_plan.md
+  h_489c0496f9f57d 1-185
+docs/ffmpeg_licensing_analysis.md
+  h_489c0496f9f57d 1-364
+docs/research/existing_solutions.md
+  h_489c0496f9f57d 1-221
+docs/research/licensing.md
+  h_489c0496f9f57d 1-100
+docs/research/performance.md
+  h_489c0496f9f57d 1-261
+docs/research/rust_ffmpeg.md
+  h_489c0496f9f57d 1-286
+docs/spm_conversion_problems.md
+  h_489c0496f9f57d 1-330
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "5c271b14f5b9adf7b68a29e0e9af6ead7517e5cf",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
