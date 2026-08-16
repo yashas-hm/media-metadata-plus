@@ -1,0 +1,14 @@
+.pubignore
+  h_489c0496f9f57d 60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "990920c4dab85a9d716cb9349bba0735deb76edf",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
