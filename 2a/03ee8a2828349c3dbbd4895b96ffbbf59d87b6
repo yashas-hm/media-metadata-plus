@@ -1,0 +1,16 @@
+example/test/media_metadata_test.dart
+  h_489c0496f9f57d 11
+rust/rust-toolchain.toml
+  h_489c0496f9f57d 2-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "2a03ee8a2828349c3dbbd4895b96ffbbf59d87b6",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
