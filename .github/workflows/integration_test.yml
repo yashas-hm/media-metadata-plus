@@ -2,6 +2,15 @@ name: Integration Test
 
 on:
   pull_request:
+    paths:
+      - 'rust/**'
+      - 'rust/src/frb_generated.rs'
+      - 'lib/**'
+      - 'lib/src/rust/**'
+      - 'example/**'
+      - 'flutter_rust_bridge.yaml'
+      - 'pubspec.yaml'
+      - '.github/workflows/integration_test.yml'
   workflow_dispatch:
 
 jobs:
