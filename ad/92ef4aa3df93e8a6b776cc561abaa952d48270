@@ -1,0 +1,16 @@
+.github/workflows/release.yml
+  h_489c0496f9f57d 296,375-385
+docs/research/pubdev_publishing.md
+  h_489c0496f9f57d 1-124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "ad92ef4aa3df93e8a6b776cc561abaa952d48270",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
