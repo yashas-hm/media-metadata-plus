@@ -293,7 +293,7 @@ jobs:
   release-and-publish:
     needs: [versioning, build-apple, build-linux-android, build-windows]
     runs-on: ubuntu-latest
-    environment: pub.dev  # must match the environment name set on pub.dev automated publishing
+#    environment: pub.dev  # must match the environment name set on pub.dev automated publishing
     permissions:
       contents: write       # create release + push Package.swift commit
       pull-requests: write  # open the main-sync PR
@@ -372,17 +372,17 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && !inputs.publish
         run: echo "Manual run without publish — stopping after release + checksum commit." && exit 0
 
-      # Publish to pub.dev — binaries + stamped Package.swift are in the tarball
-      - uses: subosito/flutter-action@v2     # install Flutter (and its bundled Dart) first
-        with:
-          channel: stable
-      - uses: dart-lang/setup-dart@v1.8.0   # OIDC token exchange runs last so credentials aren't overwritten
-
-      - name: Validate package (dry run)
-        run: flutter pub publish --dry-run
-
-      - name: Publish to pub.dev
-        run: flutter pub publish --force
+#      # Publish to pub.dev — binaries + stamped Package.swift are in the tarball
+#      - uses: subosito/flutter-action@v2     # install Flutter (and its bundled Dart) first
+#        with:
+#          channel: stable
+#      - uses: dart-lang/setup-dart@v1.8.0   # OIDC token exchange runs last so credentials aren't overwritten
+#
+#      - name: Validate package (dry run)
+#        run: flutter pub publish --dry-run
+#
+#      - name: Publish to pub.dev
+#        run: flutter pub publish --force
 
   # ── Roll back the tag + GitHub Release if anything above failed ─────────────
   cleanup-on-failure:
@@ -394,6 +394,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -405,6 +406,14 @@ jobs:
         run: |
           VERSION="${{ needs.versioning.outputs.version }}"
           gh release delete "$VERSION" --yes || echo "No release to delete for $VERSION."
+
+      - name: Close sync-main PR, if one was opened
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="bot/release-${{ needs.versioning.outputs.version }}"
+          gh pr close "$BRANCH" --delete-branch=false --comment "Closing: release run failed, rolling back this release." \
+            || echo "No open PR for $BRANCH."
 
       - name: Delete tag
         run: |
