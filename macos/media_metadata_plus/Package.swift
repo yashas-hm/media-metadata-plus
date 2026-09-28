@@ -11,7 +11,7 @@ let rustTarget: Target = ProcessInfo.processInfo.environment["MMP_LOCAL_XCFRAMEW
 } ?? .binaryTarget(
     name: "MediaMetadataPlusRust",
     url: "https://github.com/yashas-hm/media-metadata-plus/releases/download/v1.5.1/macos_v1.5.1.xcframework.zip",
-    checksum: "fd257cf1a19ec83eade83f5250c075292fa624cdaadd3b91358883a518c8f522" // macos
+    checksum: "418a74f0a002f9fbecdf842163a7034616380a7532f62db5449572b36b77507b" // macos
 )
 
 let package = Package(
