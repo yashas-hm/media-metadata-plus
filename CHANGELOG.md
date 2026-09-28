@@ -1,3 +1,7 @@
+## 1.5.1
+
+* Pinned `flutter_rust_bridge` to an exact `2.12.0` (was `^2.12.0`) — the generated Dart bindings are tied to that exact bridge version, and a caret range could let a consumer resolve a newer `flutter_rust_bridge` that breaks the generated FFI code. Matches the existing exact pin already used on the Rust side (`rust/Cargo.toml`).
+
 ## 1.5.0
 
 * Fixed MOV files failing to return **any** metadata (duration, dimensions, creation time all `null`) when the file's audio track used a legacy QuickTime "Sound Sample Description" (version 1/2, common in older or third-party `.mov` exports). The underlying `mp4` crate only understands the newer ISO format and errored on the whole file; metadata now falls back to reading `moov`/`mvhd`/`tkhd` directly when that happens.
