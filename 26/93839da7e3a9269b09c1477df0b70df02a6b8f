@@ -1,0 +1,16 @@
+CHANGELOG.md
+  h_489c0496f9f57d 1-4
+pubspec.yaml
+  h_489c0496f9f57d 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "2693839da7e3a9269b09c1477df0b70df02a6b8f",
+  "prompts": {},
+  "humans": {
+    "h_489c0496f9f57d": {
+      "author": "Yashas H Majmudar <yashashm.dev@gmail.com>"
+    }
+  }
+}
