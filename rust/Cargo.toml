@@ -16,5 +16,5 @@ rayon = "1"
 # Major version = FFmpeg major version. Bumping it needs a matching prebuilt
 # rebuild (scripts/ci/ffmpeg_prebuilt_tag, build_ffmpeg_prebuilt.yml) — see
 # docs/decisions.md.
-ffmpeg-next = { version = "8", default-features = false, features = ["codec", "format", "software-scaling"] }
+ffmpeg-next = { version = "9", default-features = false, features = ["codec", "format", "software-scaling"] }
 jpeg-encoder = "0.7"
